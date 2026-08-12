@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, applyAction } from '@/lib/game';
+import { createGame, applyAction, RESULT_MS } from '@/lib/game';
 import type { GameState, Ctx } from '@/lib/game/types';
 
 function ctx(nowMs = 1_000_000, start = 0): Ctx {
@@ -114,5 +114,68 @@ describe('START_GAME', () => {
     expect(lot.activeTeamIds).toEqual(['t-b']);
     expect(lot.turnTeamId).toBe('t-b');
     expect(lot.openerTeamId).toBe('t-b');
+  });
+
+  it('teklif gelmezse lot en son pas gecen takima bedelsiz gider', () => {
+    let s = game({ budget: 0 });
+    s = {
+      ...s,
+      teams: [
+        { id: 't-a', name: 'A', seat: 0, budgetLeft: 0, itemsWon: 0, connected: true },
+        { id: 't-b', name: 'B', seat: 1, budgetLeft: 0, itemsWon: 0, connected: true },
+        { id: 't-c', name: 'C', seat: 2, budgetLeft: 0, itemsWon: 0, connected: true },
+      ],
+      items: [{ id: 'i-1', name: 'Ev', imageUrl: null }],
+    };
+
+    const r = applyAction(s, { type: 'START_GAME', byTeamId: 't-a' }, ctx(1_000_000));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+
+    expect(r.events.map((e) => e.type)).toEqual([
+      'LOT_OPENED',
+      'TEAM_PASSED',
+      'TEAM_PASSED',
+      'TEAM_PASSED',
+      'LOT_SOLD',
+    ]);
+
+    const lot = r.state.lots[0];
+    expect(lot.status).toBe('sold');
+    expect(lot.finalPrice).toBe(0);
+    expect(lot.winnerTeamId).toBe('t-c');
+
+    const soldEvent = r.events.find((e) => e.type === 'LOT_SOLD');
+    expect(soldEvent).toMatchObject({ winnerTeamId: 't-c', price: 0, free: true });
+
+    expect(r.state.resultUntil).toBe(new Date(1_000_000 + RESULT_MS).toISOString());
+
+    const winner = r.state.teams.find((t) => t.id === 't-c')!;
+    expect(winner.itemsWon).toBe(1);
+    expect(winner.budgetLeft).toBe(0);
+  });
+
+  it('limiti dolu takim devralamaz, butcesi yetmeyen otomatik pas gecen devralir', () => {
+    let s = game({ itemLimit: 1 });
+    s = {
+      ...s,
+      teams: [
+        { id: 't-a', name: 'A', seat: 0, budgetLeft: 10, itemsWon: 1, connected: true },
+        { id: 't-b', name: 'B', seat: 1, budgetLeft: 0, itemsWon: 0, connected: true },
+      ],
+      items: [{ id: 'i-1', name: 'Ev', imageUrl: null }],
+    };
+
+    const r = applyAction(s, { type: 'START_GAME', byTeamId: 't-a' }, ctx());
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+
+    const lot = r.state.lots[0];
+    expect(lot.winnerTeamId).toBe('t-b');
+
+    const teamA = r.state.teams.find((t) => t.id === 't-a')!;
+    const teamB = r.state.teams.find((t) => t.id === 't-b')!;
+    expect(teamA.itemsWon).toBe(1); // limiti doluydu, devralamadi
+    expect(teamB.itemsWon).toBe(1); // butcesi yetmeyen otomatik pas gecen devraldi
   });
 });
