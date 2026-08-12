@@ -6,9 +6,17 @@ import {
   MIN_TEAMS,
   RESULT_MS,
 } from './constants';
-// Not: minBid ve openLot Task 3'te BID/PASS dallariyla birlikte eklenir.
-// Simdi eklenirse kullanilmayan import lint hatasi verir.
-import { canAfford, err, findTeam, hasRoom, teamAtSeat, withLot, withTeam } from './helpers';
+import {
+  canAfford,
+  err,
+  findTeam,
+  hasRoom,
+  minBid,
+  openLot,
+  teamAtSeat,
+  withLot,
+  withTeam,
+} from './helpers';
 import type {
   Action,
   ApplyResult,
@@ -278,6 +286,66 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       if (state.items.length === 0) return err('NO_ITEMS', 'Urun listesi bos.');
       const started = openNextLot({ ...state, status: 'auction' }, ctx);
       return { ok: true, state: started.state, events: started.events };
+    }
+
+    case 'BID': {
+      if (state.status !== 'auction') return err('WRONG_STATUS', 'Acik artirma surmuyor.');
+      const lot = openLot(state);
+      if (!lot) return err('LOT_NOT_OPEN', 'Acik lot yok.');
+      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sira sizde degil.');
+      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur gecti.');
+
+      const team = findTeam(state, action.teamId);
+      if (!team) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+      if (!Number.isInteger(action.amount) || action.amount < minBid(lot)) {
+        return err('BID_TOO_LOW', `En az ${minBid(lot)} verilmeli.`);
+      }
+      if (action.amount > team.budgetLeft) {
+        return err('BID_OVER_BUDGET', `Butceniz ${team.budgetLeft}.`);
+      }
+
+      const bidded = withLot(state, {
+        ...lot,
+        currentBid: action.amount,
+        currentBidderTeamId: team.id,
+        log: [
+          ...lot.log,
+          { teamId: team.id, kind: 'bid', amount: action.amount, at: ctx.now.toISOString() },
+        ],
+      });
+
+      const placed: GameEvent = {
+        type: 'BID_PLACED',
+        lotId: lot.id,
+        teamId: team.id,
+        amount: action.amount,
+      };
+      const resolved = resolveTurn(bidded, lot.id, team.seat + 1, ctx);
+      return { ok: true, state: resolved.state, events: [placed, ...resolved.events] };
+    }
+
+    case 'PASS': {
+      if (state.status !== 'auction') return err('WRONG_STATUS', 'Acik artirma surmuyor.');
+      const lot = openLot(state);
+      if (!lot) return err('LOT_NOT_OPEN', 'Acik lot yok.');
+      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sira sizde degil.');
+      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur gecti.');
+
+      const team = findTeam(state, action.teamId);
+      if (!team) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+
+      const passed = withLot(state, {
+        ...lot,
+        activeTeamIds: lot.activeTeamIds.filter((id) => id !== team.id),
+        log: [
+          ...lot.log,
+          { teamId: team.id, kind: 'pass', amount: null, at: ctx.now.toISOString() },
+        ],
+      });
+
+      const ev: GameEvent = { type: 'TEAM_PASSED', lotId: lot.id, teamId: team.id, auto: false };
+      const resolved = resolveTurn(passed, lot.id, team.seat + 1, ctx);
+      return { ok: true, state: resolved.state, events: [ev, ...resolved.events] };
     }
 
     default:
