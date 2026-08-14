@@ -12,19 +12,26 @@ interface Props {
   meId: TeamId | null;
   /** Teklif kutugunu gostersin mi; telefonda ray disinda cizilir. */
   withLog?: boolean;
+  /** true ise seritler kalan dikey alani esit paylasir (masaustu). */
+  fill?: boolean;
 }
 
-/** Takim seritleri koltuk sirasiyla; altinda bu lotun teklif kutugu. */
-export function TeamRail({ state, lot, meId, withLog = true }: Props) {
+/**
+ * Takim seritleri koltuk sirasiyla; altinda bu urunun teklif kutugu.
+ *
+ * En fazla 4 takim var, o yuzden masaustunde seritler kalan yuksekligi
+ * paylasir: ray ustte sikismaz, alan bos kalmaz.
+ */
+export function TeamRail({ state, lot, meId, withLog = true, fill = false }: Props) {
   const teams = [...state.teams].sort((a, b) => a.seat - b.seat);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={['flex flex-col', fill ? 'h-full min-h-0' : ''].join(' ')}>
       <div className="shrink-0 border-b border-[var(--color-line)] px-4 py-2.5 font-[family-name:var(--font-mono)] text-[9px] tracking-[0.2em] text-[var(--color-mute)]">
         TAKIMLAR
       </div>
 
-      <div className="shrink-0">
+      <div className={['flex flex-col', fill ? 'min-h-0 flex-[3]' : ''].join(' ')}>
         {teams.map((team) => (
           <TeamLane
             key={team.id}
@@ -35,12 +42,13 @@ export function TeamRail({ state, lot, meId, withLog = true }: Props) {
             isOut={!!lot && !lot.activeTeamIds.includes(team.id)}
             status={laneStatus(state, lot, team.id)}
             won={wonItems(state, team.id).map((w) => w.name)}
+            fill={fill}
           />
         ))}
       </div>
 
       {withLog && lot && (
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className={['overflow-y-auto', fill ? 'min-h-0 flex-1' : ''].join(' ')}>
           <BidLog lot={lot} teams={state.teams} />
         </div>
       )}

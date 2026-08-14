@@ -12,6 +12,8 @@ interface Props {
   status: LaneStatus;
   /** Bu takimin kazandigi urun adlari. Oyun boyunca gorunur olmali. */
   won: string[];
+  /** true ise serit kalan dikey alani paylasir. */
+  fill?: boolean;
 }
 
 /** Urun limiti gostergesi: limit kadar kutucuk, dolular kazanilan urunler. */
@@ -70,7 +72,7 @@ function WonStrip({ names, onLight }: { names: string[]; onLight: boolean }) {
  * Bir takimin seridi. Sirasi gelen serit beyaza doner: beyaz
  * "simdi sen oyna" demektir, kirmizi yalnizca baskiyi anlatir.
  */
-export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won }: Props) {
+export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won, fill = false }: Props) {
   return (
     <div
       data-testid="lane"
@@ -78,8 +80,9 @@ export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won }: 
       data-turn={isTurn ? 'true' : 'false'}
       data-out={isOut ? 'true' : 'false'}
       className={[
-        'border-b border-[var(--color-line-soft)] px-4 py-3',
+        'flex flex-col justify-center border-b border-[var(--color-line-soft)] px-4 py-3',
         'transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]',
+        fill ? 'min-h-0 flex-1' : '',
         isTurn ? 'bg-[var(--color-text)] text-[var(--color-bg)]' : '',
         isOut ? 'opacity-30' : '',
       ].join(' ')}

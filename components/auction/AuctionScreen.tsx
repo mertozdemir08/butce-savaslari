@@ -127,7 +127,7 @@ export function AuctionScreen({
 
           <aside className="min-h-0 md:overflow-hidden">
             <div className="hidden h-full md:block">
-              <TeamRail state={state} lot={lot} meId={me?.id ?? null} />
+              <TeamRail state={state} lot={lot} meId={me?.id ?? null} fill />
             </div>
             <div className="md:hidden">
               <TeamRail state={state} lot={lot} meId={me?.id ?? null} withLog={false} />
