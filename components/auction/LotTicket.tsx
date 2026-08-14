@@ -92,24 +92,23 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
         className="my-3 shrink-0 border-t-[1.5px] border-dashed border-[var(--color-line)]"
       />
 
-      {/* 3. bant: mevcut teklif ve sahibi */}
-      <div className="flex shrink-0 items-end justify-center gap-6">
-        <div>
-          <span className="block font-[family-name:var(--font-mono)] text-[9px] tracking-[0.15em] text-[var(--color-mute)]">
-            MEVCUT TEKLİF
-          </span>
-          <span
-            data-testid="current-bid"
-            className={[
-              'tnum mt-0.5 block font-[family-name:var(--font-display)] font-extrabold leading-none text-[var(--color-accent)]',
-              fill ? 'text-[44px] md:text-[clamp(2.5rem,5vh,4rem)]' : 'text-[42px]',
-            ].join(' ')}
-          >
-            {lot.currentBid ?? '-'}
-          </span>
-        </div>
+      {/* 3. bant: mevcut teklif ve sahibi. Dikey yigin, hepsi ortada:
+          yan yana dizilince teklif sahibinin genisligi rakami yana kaydiriyordu. */}
+      <div className="flex shrink-0 flex-col items-center text-center">
+        <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.15em] text-[var(--color-mute)]">
+          MEVCUT TEKLİF
+        </span>
+        <span
+          data-testid="current-bid"
+          className={[
+            'tnum mt-0.5 block font-[family-name:var(--font-display)] font-extrabold leading-none text-[var(--color-accent)]',
+            fill ? 'text-[44px] md:text-[clamp(2.5rem,5vh,4rem)]' : 'text-[42px]',
+          ].join(' ')}
+        >
+          {lot.currentBid ?? '-'}
+        </span>
         {bidderName && (
-          <span className="pb-1.5 font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-mute)]">
+          <span className="mt-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-mute)]">
             {bidderName}
           </span>
         )}
