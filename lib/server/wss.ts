@@ -43,6 +43,21 @@ export function attachGameServer(
     }
   }
 
+  /**
+   * Odanin bagli takim listesini soketlerden turetip motora bildirir.
+   * Motor degisiklik yoksa yazmaz; host ayrildiysa yetkiyi kendiliginden devreder.
+   */
+  function syncPresence(code: string): void {
+    const online: string[] = [];
+    for (const [socket, conn] of conns) {
+      if (conn.code === code && conn.teamId && socket.readyState === WebSocket.OPEN) {
+        online.push(conn.teamId);
+      }
+    }
+    const outcome = store.apply(code, null, { type: 'SET_PRESENCE', onlineTeamIds: online });
+    if (outcome.ok && outcome.events.length > 0) broadcast(code);
+  }
+
   wss.on('connection', (socket: WebSocket) => {
     conns.set(socket, { code: null, teamId: null });
 
@@ -66,9 +81,15 @@ export function attachGameServer(
       if (result.attach) conns.set(socket, result.attach);
       for (const reply of result.reply) send(socket, reply);
       if (result.broadcast) broadcast(result.broadcast);
+      // Yeni bir baglanti odaya bagliysa varlik listesi degismis olabilir.
+      if (result.attach?.code) syncPresence(result.attach.code);
     });
 
-    const drop = () => conns.delete(socket);
+    const drop = () => {
+      const gone = conns.get(socket);
+      conns.delete(socket);
+      if (gone?.code) syncPresence(gone.code);
+    };
     socket.on('close', drop);
     socket.on('error', drop);
   });

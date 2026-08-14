@@ -210,6 +210,32 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       };
     }
 
+    case 'SET_PRESENCE': {
+      const online = new Set(action.onlineTeamIds);
+      const changed = state.teams.some((t) => t.connected !== online.has(t.id));
+      if (!changed) return { ok: true, state, events: [] };
+
+      const teams = state.teams.map((t) => ({ ...t, connected: online.has(t.id) }));
+      // Bagli bayraklari degisti: bu tek basina yayinlanmasi gereken bir degisiklik.
+      // Olay yayinlamazsak durum sessizce degisir ve istemciler gormez.
+      const events: GameEvent[] = [{ type: 'PRESENCE_CHANGED' }];
+
+      // Host ayrildiysa yetki koltuk sirasindaki ilk bagli takima gecer.
+      // Ayri bir "host talep et" adimi yok: devir kendiliginden olur,
+      // boylece kimsenin karar vermesi gerekmez ve yaris durumu olusmaz.
+      let hostTeamId = state.hostTeamId;
+      const host = teams.find((t) => t.id === hostTeamId);
+      if (host && !host.connected) {
+        const successor = [...teams].sort((a, b) => a.seat - b.seat).find((t) => t.connected);
+        if (successor) {
+          hostTeamId = successor.id;
+          events.push({ type: 'HOST_CHANGED', teamId: successor.id });
+        }
+      }
+
+      return { ok: true, state: { ...state, teams, hostTeamId }, events };
+    }
+
     default:
       return err('WRONG_STATUS', 'Bu işlem desteklenmiyor.');
   }

@@ -97,8 +97,8 @@ export type Action =
   | { type: 'PASS'; teamId: TeamId; turnSeq: number }
   | { type: 'TIMEOUT'; lotId: LotId; turnSeq: number }
   | { type: 'ADVANCE' }
-  | { type: 'VOTE'; teamId: TeamId; rankedTeamIds: TeamId[] };
-// Not: SET_PRESENCE aksiyonu Task 20'de eklenir.
+  | { type: 'VOTE'; teamId: TeamId; rankedTeamIds: TeamId[] }
+  | { type: 'SET_PRESENCE'; onlineTeamIds: TeamId[] };
 
 export type GameEvent =
   | { type: 'TEAM_JOINED'; teamId: TeamId }
@@ -109,7 +109,9 @@ export type GameEvent =
   | { type: 'LOT_SOLD'; lotId: LotId; winnerTeamId: TeamId; price: number; free: boolean }
   | { type: 'GAME_ENDED' }
   | { type: 'VOTING_STARTED' }
-  | { type: 'VOTE_CAST'; teamId: TeamId };
+  | { type: 'VOTE_CAST'; teamId: TeamId }
+  | { type: 'PRESENCE_CHANGED' }
+  | { type: 'HOST_CHANGED'; teamId: TeamId };
 
 export type RuleErrorCode =
   | 'WRONG_STATUS'
