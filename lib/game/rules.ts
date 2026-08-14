@@ -388,6 +388,36 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       return { ok: true, state: next.state, events: next.events };
     }
 
+    case 'VOTE': {
+      if (state.status !== 'voting') return err('WRONG_STATUS', 'Oylama asamasi degil.');
+      if (!findTeam(state, action.teamId)) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+      if (state.votes.some((v) => v.voterTeamId === action.teamId)) {
+        return err('ALREADY_VOTED', 'Zaten oy verdiniz.');
+      }
+
+      const expected = state.teams
+        .filter((t) => t.id !== action.teamId)
+        .map((t) => t.id)
+        .sort();
+      const given = [...action.rankedTeamIds].sort();
+      const sameSet =
+        expected.length === given.length && expected.every((id, i) => id === given[i]);
+      if (!sameSet) {
+        return err('INVALID_RANKING', 'Kendiniz disindaki tum takimlar bir kez siralanmali.');
+      }
+
+      const votes = [
+        ...state.votes,
+        { voterTeamId: action.teamId, rankedTeamIds: action.rankedTeamIds },
+      ];
+      const done = votes.length === state.teams.length;
+      return {
+        ok: true,
+        state: { ...state, votes, status: done ? 'finished' : 'voting' },
+        events: [{ type: 'VOTE_CAST', teamId: action.teamId }],
+      };
+    }
+
     default:
       return err('WRONG_STATUS', 'Bu aksiyon henuz desteklenmiyor.');
   }
