@@ -348,6 +348,36 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       return { ok: true, state: resolved.state, events: [ev, ...resolved.events] };
     }
 
+    case 'TIMEOUT': {
+      // Bu aksiyon idempotenttir: uygulanabilir degilse hata degil, bos sonuc doner.
+      // Odadaki her istemci ayni anda cagirabilir.
+      const noop = { ok: true as const, state, events: [] as GameEvent[] };
+
+      if (state.status !== 'auction') return noop;
+      const lot = openLot(state);
+      if (!lot || lot.id !== action.lotId) return noop;
+      if (lot.turnSeq !== action.turnSeq) return noop;
+      if (!lot.turnDeadline) return noop;
+      if (ctx.now.getTime() < new Date(lot.turnDeadline).getTime()) return noop;
+      if (!lot.turnTeamId) return noop;
+
+      const team = findTeam(state, lot.turnTeamId);
+      if (!team) return noop;
+
+      const passed = withLot(state, {
+        ...lot,
+        activeTeamIds: lot.activeTeamIds.filter((id) => id !== team.id),
+        log: [
+          ...lot.log,
+          { teamId: team.id, kind: 'auto_pass', amount: null, at: ctx.now.toISOString() },
+        ],
+      });
+
+      const ev: GameEvent = { type: 'TEAM_PASSED', lotId: lot.id, teamId: team.id, auto: true };
+      const resolved = resolveTurn(passed, lot.id, team.seat + 1, ctx);
+      return { ok: true, state: resolved.state, events: [ev, ...resolved.events] };
+    }
+
     default:
       return err('WRONG_STATUS', 'Bu aksiyon henuz desteklenmiyor.');
   }
