@@ -80,7 +80,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
       {/* 2. bant: urun adi */}
       <h2
         className={[
-          'mt-3 shrink-0 break-words font-[family-name:var(--font-display)] font-extrabold uppercase leading-[0.9]',
+          'mt-3 shrink-0 break-words text-center font-[family-name:var(--font-display)] font-extrabold uppercase leading-[0.9]',
           fill ? 'text-[40px] md:text-[clamp(2.5rem,6.5vh,5.5rem)]' : 'text-[42px] md:text-[52px]',
         ].join(' ')}
       >
@@ -93,7 +93,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
       />
 
       {/* 3. bant: mevcut teklif ve sahibi */}
-      <div className="flex shrink-0 items-end gap-6">
+      <div className="flex shrink-0 items-end justify-center gap-6">
         <div>
           <span className="block font-[family-name:var(--font-mono)] text-[9px] tracking-[0.15em] text-[var(--color-mute)]">
             MEVCUT TEKLİF

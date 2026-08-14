@@ -31,7 +31,7 @@ export function TeamRail({ state, lot, meId, withLog = true, fill = false }: Pro
         TAKIMLAR
       </div>
 
-      <div className={['flex flex-col', fill ? 'min-h-0 flex-[3]' : ''].join(' ')}>
+      <div className={['flex flex-col', fill ? 'shrink-0' : ''].join(' ')}>
         {teams.map((team) => (
           <TeamLane
             key={team.id}

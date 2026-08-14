@@ -46,7 +46,7 @@ export function Countdown({ deadline, clockOffsetMs, totalSeconds, onExpire }: P
   const pct = Math.max(0, Math.min(100, (left / (totalSeconds * 1000)) * 100));
 
   return (
-    <div className="flex w-full max-w-[220px] flex-col items-end gap-1">
+    <div className="flex w-full max-w-[220px] flex-col items-center gap-1">
       <span
         data-testid="countdown"
         data-urgent={urgent ? 'true' : 'false'}

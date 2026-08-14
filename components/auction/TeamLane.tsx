@@ -82,7 +82,7 @@ export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won, fi
       className={[
         'flex flex-col justify-center border-b border-[var(--color-line-soft)] px-4 py-3',
         'transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]',
-        fill ? 'min-h-0 flex-1' : '',
+        fill ? 'min-h-[76px]' : '',
         isTurn ? 'bg-[var(--color-text)] text-[var(--color-bg)]' : '',
         isOut ? 'opacity-30' : '',
       ].join(' ')}
