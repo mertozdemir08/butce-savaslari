@@ -9,6 +9,8 @@ interface Props {
   bidderName: string | null;
   /** Lot kapandiginda basilan damga. */
   stamp?: { text: string } | null;
+  /** true ise bilet kalan dikey alani doldurur (masaustu acik artirma ekrani). */
+  fill?: boolean;
 }
 
 /**
@@ -28,16 +30,26 @@ function Notch({ side }: { side: 'left' | 'right' }) {
 }
 
 /** Oyunun imza ogesi: numarali, perfore, satilinca damgalanan lot bileti. */
-export function LotTicket({ lot, item, bidderName, stamp = null }: Props) {
+export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }: Props) {
   const lotNo = String(lot.lotNo).padStart(2, '0');
 
   return (
-    <div className="relative rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] p-[18px]">
+    <div
+      className={[
+        'relative rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] p-[18px]',
+        fill ? 'flex h-full min-h-0 flex-col' : '',
+      ].join(' ')}
+    >
       <Notch side="left" />
       <Notch side="right" />
 
-      <div className="flex flex-col gap-5 md:flex-row">
-        <div className="relative h-[150px] w-full shrink-0 overflow-hidden rounded-[3px] bg-[#1d1d1d] md:w-[190px]">
+      <div className={['flex flex-col gap-5 md:flex-row', fill ? 'min-h-0 flex-1' : ''].join(' ')}>
+        <div
+          className={[
+            'relative w-full shrink-0 overflow-hidden rounded-[3px] bg-[#1d1d1d]',
+            fill ? 'h-[160px] md:h-auto md:w-[42%]' : 'h-[150px] md:w-[190px]',
+          ].join(' ')}
+        >
           {item.imageUrl ? (
             <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
           ) : (
@@ -45,7 +57,11 @@ export function LotTicket({ lot, item, bidderName, stamp = null }: Props) {
             <span
               data-testid="image-fallback"
               aria-hidden
-              className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-display)] text-[54px] font-extrabold text-[var(--color-line)]"
+              className={[
+                'absolute inset-0 flex items-center justify-center',
+                'font-[family-name:var(--font-display)] font-extrabold text-[var(--color-line)]',
+                fill ? 'text-[120px]' : 'text-[54px]',
+              ].join(' ')}
             >
               {lotNo}
             </span>
@@ -57,7 +73,12 @@ export function LotTicket({ lot, item, bidderName, stamp = null }: Props) {
             {`LOT NO. ${lotNo}`}
           </span>
 
-          <h2 className="mt-1.5 break-words font-[family-name:var(--font-display)] text-[42px] font-extrabold uppercase leading-[0.9] md:text-[58px]">
+          <h2
+            className={[
+              'mt-1.5 break-words font-[family-name:var(--font-display)] font-extrabold uppercase leading-[0.88]',
+              fill ? 'text-[46px] md:text-[76px] lg:text-[92px]' : 'text-[42px] md:text-[58px]',
+            ].join(' ')}
+          >
             {item.name}
           </h2>
 
@@ -73,7 +94,10 @@ export function LotTicket({ lot, item, bidderName, stamp = null }: Props) {
               </span>
               <span
                 data-testid="current-bid"
-                className="tnum mt-0.5 block font-[family-name:var(--font-display)] text-[42px] font-extrabold leading-none text-[var(--color-accent)]"
+                className={[
+                  'tnum mt-0.5 block font-[family-name:var(--font-display)] font-extrabold leading-none text-[var(--color-accent)]',
+                  fill ? 'text-[56px] md:text-[72px]' : 'text-[42px]',
+                ].join(' ')}
               >
                 {lot.currentBid ?? '-'}
               </span>

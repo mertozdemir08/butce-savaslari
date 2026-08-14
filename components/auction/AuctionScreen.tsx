@@ -17,13 +17,17 @@ interface Props {
   connection: Connection;
   clockOffsetMs: number;
   errorMessage: string | null;
-  /** Sonuc koreografisi oynuyorsa faz numarasi; yoksa null. */
+  /** Sonuc koreografisi oynuyorsa onun icerigi; yoksa null. */
   result: React.ReactNode | null;
   onBid: (amount: number) => void;
   onPass: () => void;
   onExpire: () => void;
 }
 
+/**
+ * Masaustunde ekranin tamamini kaplar: ust serit sabit, govde kalan
+ * yuksekligi doldurur. Bilet buyur, ray dikeyde yayilir.
+ */
 export function AuctionScreen({
   state,
   me,
@@ -44,14 +48,14 @@ export function AuctionScreen({
   if (!item) return null;
 
   return (
-    <main className="min-h-[100dvh] bg-[var(--color-bg)]">
+    <main className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--color-bg)]">
       <ConnectionBar connection={connection} />
 
-      <div className="mx-auto max-w-[1400px]">
-        <header className="flex items-stretch border-b border-[var(--color-line)]">
-          <div className="flex items-center border-r border-[var(--color-line)] px-4 py-3 font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[0.06em] text-[var(--color-mute)] md:px-5">
+      <div className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col">
+        <header className="flex shrink-0 items-stretch border-b border-[var(--color-line)]">
+          <div className="flex items-center border-r border-[var(--color-line)] px-4 py-3 font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[0.06em] text-[var(--color-mute)] md:px-6">
             LOT
-            <b className="mx-1.5 text-[22px] text-[var(--color-text)]">
+            <b className="mx-1.5 text-[26px] text-[var(--color-text)]">
               {String(lot.lotNo).padStart(2, '0')}
             </b>
             {`/${state.items.length}`}
@@ -68,27 +72,32 @@ export function AuctionScreen({
             )}
           </div>
 
-          <div className="hidden flex-col justify-center border-l border-[var(--color-line)] px-5 py-3 text-right md:flex">
+          <div className="hidden flex-col justify-center border-l border-[var(--color-line)] px-6 py-3 text-right md:flex">
             <span className="font-[family-name:var(--font-mono)] text-[8.5px] tracking-[0.2em] text-[var(--color-mute)]">
               ODA
             </span>
-            <span className="tnum mt-0.5 font-[family-name:var(--font-mono)] text-[15px] font-bold tracking-[0.12em]">
+            <span className="tnum mt-0.5 font-[family-name:var(--font-mono)] text-[16px] font-bold tracking-[0.14em]">
               {state.code}
             </span>
           </div>
         </header>
 
-        <div className="grid md:grid-cols-[1fr_300px]">
-          <section className="border-b border-[var(--color-line)] px-4 py-5 md:border-b-0 md:border-r md:px-8 md:py-7">
-            {result ?? (
+        <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[1fr_340px] md:overflow-hidden">
+          <section className="flex min-h-0 flex-col border-b border-[var(--color-line)] px-4 py-5 md:border-b-0 md:border-r md:px-8 md:py-7">
+            {result ? (
+              <div className="flex min-h-0 flex-1 items-center">{result}</div>
+            ) : (
               <>
-                <LotTicket
-                  lot={lot}
-                  item={item}
-                  bidderName={bidder ? `TAKIM ${bidder.name}` : null}
-                />
+                <div className="min-h-0 flex-1">
+                  <LotTicket
+                    lot={lot}
+                    item={item}
+                    bidderName={bidder ? `TAKIM ${bidder.name}` : null}
+                    fill
+                  />
+                </div>
 
-                <div className="mt-6">
+                <div className="mt-5 shrink-0">
                   <BidBar
                     minBid={minBidOf(lot)}
                     maxBid={me?.budgetLeft ?? 0}
@@ -116,16 +125,15 @@ export function AuctionScreen({
             )}
           </section>
 
-          <aside>
-            <TeamRail state={state} lot={lot} meId={me?.id ?? null} withLog={false} />
-            <div className="hidden md:block">
+          <aside className="min-h-0 md:overflow-hidden">
+            <div className="hidden h-full md:block">
+              <TeamRail state={state} lot={lot} meId={me?.id ?? null} />
+            </div>
+            <div className="md:hidden">
+              <TeamRail state={state} lot={lot} meId={me?.id ?? null} withLog={false} />
               <BidLog lot={lot} teams={state.teams} />
             </div>
           </aside>
-        </div>
-
-        <div className="md:hidden">
-          <BidLog lot={lot} teams={state.teams} />
         </div>
       </div>
     </main>

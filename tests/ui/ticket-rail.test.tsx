@@ -139,6 +139,7 @@ describe('TeamLane', () => {
         isTurn={false}
         isOut={false}
         status={{ kind: 'waiting', label: 'BEKLİYOR' }}
+      won={[]}
       />,
     );
     expect(screen.getByText('TAKIM A')).toBeTruthy();
@@ -157,6 +158,7 @@ describe('TeamLane', () => {
         isTurn={false}
         isOut
         status={{ kind: 'passed', label: 'PAS' }}
+      won={[]}
       />,
     );
     // Renk tek basina bilgi tasimaz: hem ustu cizili hem PAS yazili.
@@ -174,6 +176,7 @@ describe('TeamLane', () => {
         isTurn={false}
         isOut={false}
         status={{ kind: 'waiting', label: 'BEKLİYOR' }}
+      won={[]}
       />,
     );
     expect(screen.getByText('BAĞLANTI YOK')).toBeTruthy();
