@@ -6,6 +6,7 @@ import {
   type ServerMessage,
 } from './protocol';
 import type { RoomStore } from './rooms';
+import { shuffle } from './shuffle';
 
 /** Bir baglantinin hangi odaya ve hangi takima bagli oldugu. */
 export interface Conn {
@@ -44,7 +45,8 @@ export function dispatch(store: RoomStore, conn: Conn, msg: ClientMessage): Disp
   // --- Odaya baglanma ---
 
   if (msg.t === 'create') {
-    const items = toItems(msg.items);
+    // Sira sunucuda karistirilir: ayni kategori her oyunda farkli aksin.
+    const items = shuffle(toItems(msg.items));
     if (items.length === 0) return fail('NO_ITEMS', 'Ürün listesi boş.');
 
     const { room, teamId, token } = store.create({

@@ -8,7 +8,7 @@ import {
   DEFAULT_TURN_SECONDS,
   MIN_ITEMS,
 } from '@/lib/game/constants';
-import { PACKS, packToLines } from '@/lib/packs';
+import { PACKS, getPack } from '@/lib/packs';
 import { parseItemLines, type DraftItem } from './itemLines';
 
 export interface SetupValues {
@@ -24,6 +24,11 @@ const field =
   'px-3 py-2.5 text-[15px] text-[var(--color-text)]';
 const label =
   'mb-1.5 block font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.18em] text-[var(--color-mute)]';
+const chip =
+  'cursor-pointer rounded-[4px] border bg-[var(--color-surface)] px-3 py-2 text-left ' +
+  'transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]';
+const chipOn = 'border-[var(--color-accent)]';
+const chipOff = 'border-[var(--color-line)]';
 
 export function SetupForm({
   onSubmit,
@@ -38,9 +43,12 @@ export function SetupForm({
   const [budget, setBudget] = useState(DEFAULT_BUDGET);
   const [itemLimit, setItemLimit] = useState(DEFAULT_ITEM_LIMIT);
   const [turnSeconds, setTurnSeconds] = useState(DEFAULT_TURN_SECONDS);
+  /** null: kendi kategorin (metin alani). Aksi halde kuratorlu paket. */
+  const [packId, setPackId] = useState<string | null>(null);
   const [itemText, setItemText] = useState('');
 
-  const items = parseItemLines(itemText);
+  const pack = packId ? getPack(packId) : undefined;
+  const items: DraftItem[] = pack ? pack.items : parseItemLines(itemText);
   const enoughItems = items.length >= MIN_ITEMS;
   const ready = teamName.trim().length > 0 && enoughItems && !busy;
 
@@ -113,44 +121,79 @@ export function SetupForm({
       </div>
 
       <div>
-        <span className={label}>HAZIR KATEGORİ</span>
+        <span className={label}>KATEGORİ</span>
         <div className="flex flex-wrap gap-2">
-          {PACKS.map((pack) => (
+          {PACKS.map((p) => (
             <button
-              key={pack.id}
+              key={p.id}
               type="button"
-              onClick={() => setItemText(packToLines(pack))}
-              className="cursor-pointer rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2 text-left transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]"
+              data-testid="pack-option"
+              aria-pressed={packId === p.id}
+              onClick={() => setPackId(p.id)}
+              className={`${chip} ${packId === p.id ? chipOn : chipOff}`}
             >
-              <span className="block text-[13px] font-semibold">{pack.name}</span>
+              <span className="block text-[13px] font-semibold">{p.name}</span>
               <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.12em] text-[var(--color-mute)]">
-                {`${pack.items.length} ÜRÜN`}
+                {`${p.items.length} ÜRÜN`}
               </span>
             </button>
           ))}
+          <button
+            type="button"
+            aria-pressed={packId === null}
+            onClick={() => setPackId(null)}
+            className={`${chip} ${packId === null ? chipOn : chipOff}`}
+          >
+            <span className="block text-[13px] font-semibold">Kendi kategorin</span>
+            <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.12em] text-[var(--color-mute)]">
+              KENDİN YAZ
+            </span>
+          </button>
         </div>
-        <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
-          KATEGORİ SEÇİNCE AŞAĞIDAKİ LİSTEYE YAZILIR, SONRA DÜZENLEYEBİLİRSİN
-        </p>
       </div>
 
-      <div>
-        <label className={label} htmlFor="items">
-          ÜRÜNLER
-        </label>
-        <textarea
-          id="items"
-          rows={8}
-          className={`${field} font-[family-name:var(--font-mono)] text-[13px]`}
-          placeholder={'Ev\nAraba | https://ornek.test/araba.jpg\nŞöhret'}
-          value={itemText}
-          onChange={(e) => setItemText(e.target.value)}
-        />
-        <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
-          {`HER SATIR BİR ÜRÜN · GÖRSEL İÇİN: AD | URL · ${items.length} ÜRÜN`}
-          {!enoughItems && ` · EN AZ ${MIN_ITEMS} GEREKLİ`}
-        </p>
-      </div>
+      {pack ? (
+        <div>
+          <span className={label}>ÜRÜNLER</span>
+          {/* Uzun kategorilerde form altindaki "ODAYI KUR" ekran disina
+              tasiyordu: liste kendi icinde kayar, yukseklik sabit kalir. */}
+          <ul
+            data-testid="pack-item-list"
+            className="max-h-[228px] overflow-y-auto border-y border-[var(--color-line)]"
+          >
+            {pack.items.map((item) => (
+              <li
+                key={item.name}
+                data-testid="pack-item"
+                className="border-b border-[var(--color-line-soft)] px-1 py-2 text-[14px] last:border-b-0"
+              >
+                {item.name}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
+            {`HAZIR KATEGORİ · ${pack.items.length} ÜRÜN`}
+          </p>
+        </div>
+      ) : (
+        <div>
+          <label className={label} htmlFor="items">
+            ÜRÜNLER
+          </label>
+          <textarea
+            id="items"
+            rows={8}
+            className={`${field} font-[family-name:var(--font-mono)] text-[13px]`}
+            placeholder={'Ev\nAraba\nŞöhret'}
+            value={itemText}
+            onChange={(e) => setItemText(e.target.value)}
+          />
+          <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
+            {`HER SATIR BİR ÜRÜN · ${items.length} ÜRÜN`}
+            {!enoughItems && ` · EN AZ ${MIN_ITEMS} GEREKLİ`}
+          </p>
+        </div>
+      )}
 
       {error && (
         <p

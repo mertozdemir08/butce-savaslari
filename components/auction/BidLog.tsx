@@ -31,9 +31,11 @@ export function BidLog({ lot, teams }: { lot: Lot; teams: Team[] }) {
               data-testid="log-row"
               className={`flex gap-2 ${r.kind === 'bid' ? 'text-[var(--color-dim)]' : 'text-[#4e4e4e]'}`}
             >
-              <span className="w-4 text-[var(--color-text)] opacity-80">{nameOf(r.teamId)}</span>
-              <span>{KIND_LABEL[r.kind] ?? r.kind}</span>
-              <span className="tnum ml-auto">{r.amount ?? '-'}</span>
+              <span className="min-w-0 truncate text-[var(--color-text)] opacity-80">
+                {nameOf(r.teamId)}
+              </span>
+              <span className="shrink-0">{KIND_LABEL[r.kind] ?? r.kind}</span>
+              <span className="tnum ml-auto shrink-0">{r.amount ?? '-'}</span>
             </li>
           ))}
         </ul>

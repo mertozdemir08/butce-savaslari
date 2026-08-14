@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PACKS, getPack, packToLines } from '@/lib/packs';
+import { PACKS, getPack } from '@/lib/packs';
 import { MIN_ITEMS } from '@/lib/game/constants';
 
 describe('PACKS', () => {
@@ -61,26 +61,5 @@ describe('getPack', () => {
 
   it('bilinmeyen id icin undefined doner', () => {
     expect(getPack('yok')).toBeUndefined();
-  });
-});
-
-describe('packToLines', () => {
-  it('gorselsiz urunu tek satira yazar', () => {
-    const lines = packToLines({ id: 'x', name: 'X', items: [{ name: 'Ev' }] });
-    expect(lines).toBe('Ev');
-  });
-
-  it('gorselli urunu dikey cizgiyle ayirir', () => {
-    const lines = packToLines({
-      id: 'x',
-      name: 'X',
-      items: [{ name: 'Ev', imageUrl: '/packs/x/ev.jpg' }],
-    });
-    expect(lines).toBe('Ev | /packs/x/ev.jpg');
-  });
-
-  it('her urunu ayri satira koyar', () => {
-    const lines = packToLines({ id: 'x', name: 'X', items: [{ name: 'A' }, { name: 'B' }] });
-    expect(lines.split('\n')).toEqual(['A', 'B']);
   });
 });

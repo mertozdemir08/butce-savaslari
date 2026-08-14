@@ -55,12 +55,28 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
       {/* 1. bant: gorsel, kalan alani doldurur */}
       <div
         className={[
-          'relative mt-2 w-full shrink-0 overflow-hidden rounded-[3px] bg-[#1d1d1d]',
+          'relative mt-2 flex w-full shrink-0 items-center justify-center overflow-hidden rounded-[3px] bg-[#1d1d1d]',
           fill ? 'min-h-[120px] flex-1' : 'h-[150px]',
         ].join(' ')}
       >
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+          // Kaynak gorseller 300x171..300x265; net kopya en fazla 2x buyur,
+          // otesinde bulaniklasiyor. Kalan yeri ayni gorselin bulanik ve
+          // koyultulmus kopyasi doldurur: bant bos kalmaz, bulaniklik zemin
+          // gibi okunur. Buyutme blur kenarinin gorunmesini engeller.
+          <>
+            <img
+              aria-hidden
+              src={item.imageUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl brightness-[0.45]"
+            />
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="relative h-full max-h-[342px] w-full max-w-[600px] object-cover"
+            />
+          </>
         ) : (
           // Gorsel yoksa bosluk degil, urun numarasi oturur: duzen bozulmaz.
           <span

@@ -54,6 +54,32 @@ describe('dispatch - odaya baglanma', () => {
     expect(store.size()).toBe(1);
   });
 
+  it('create urun sirasini karistirir', () => {
+    const store = createRoomStore();
+    const many = Array.from({ length: 20 }, (_, i) => ({ name: `Urun ${i + 1}` }));
+    const orders: string[] = [];
+
+    for (let run = 0; run < 10; run++) {
+      const r = dispatch(store, { code: null, teamId: null }, {
+        t: 'create',
+        teamName: 'A',
+        budget: 10,
+        itemLimit: 5,
+        turnSeconds: 30,
+        items: many,
+      });
+      const welcome = r.reply[0];
+      if (welcome.t !== 'welcome') throw new Error('welcome bekleniyordu');
+      const stored = store.get(welcome.code)!.state.items;
+      expect(stored.map((i) => i.name).sort()).toEqual(many.map((i) => i.name).sort());
+      orders.push(stored.map((i) => i.name).join('|'));
+    }
+
+    // 20 urunun 10 denemede de girdi sirasinda kalmasi pratikte imkansiz.
+    const inputOrder = many.map((i) => i.name).join('|');
+    expect(orders.every((o) => o === inputOrder)).toBe(false);
+  });
+
   it('urunsuz create reddedilir', () => {
     const store = createRoomStore();
     const r = dispatch(store, { code: null, teamId: null }, {

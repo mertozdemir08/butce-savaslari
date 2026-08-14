@@ -10,6 +10,8 @@ import { VoteScreen } from '@/components/vote/VoteScreen';
 import { ResultScreen } from '@/components/result/ResultScreen';
 import { moveItem, wonItems } from '@/components/result/collection';
 import { parseItemLines } from '@/components/setup/itemLines';
+import { SetupForm } from '@/components/setup/SetupForm';
+import { PACKS } from '@/lib/packs';
 import type { GameState, Lot, Team } from '@/lib/game/types';
 
 afterEach(cleanup);
@@ -58,6 +60,47 @@ describe('parseItemLines', () => {
 
   it('bos metin icin bos dizi doner', () => {
     expect(parseItemLines('   ')).toEqual([]);
+  });
+});
+
+describe('SetupForm kategori secimi', () => {
+  const pack = PACKS.find((p) => p.items.some((i) => i.imageUrl))!;
+
+  function renderForm() {
+    render(<SetupForm onSubmit={vi.fn()} busy={false} error={null} />);
+  }
+
+  it('hazir kategori secilince urun metin alani kapanir', () => {
+    renderForm();
+    expect(screen.getByLabelText('ÜRÜNLER')).toBeTruthy();
+    act(() => {
+      screen.getByText(pack.name).click();
+    });
+    expect(screen.queryByLabelText('ÜRÜNLER')).toBeNull();
+  });
+
+  it('hazir kategoride sadece urun adlari gorunur, gorsel yolu gorunmez', () => {
+    renderForm();
+    act(() => {
+      screen.getByText(pack.name).click();
+    });
+    const rows = screen.getAllByTestId('pack-item').map((el) => el.textContent);
+    expect(rows).toEqual(pack.items.map((i) => i.name));
+    for (const item of pack.items) {
+      if (item.imageUrl) expect(document.body.textContent).not.toContain(item.imageUrl);
+    }
+  });
+
+  it('kendi kategorin secilince bos metin alani doner', () => {
+    renderForm();
+    act(() => {
+      screen.getByText(pack.name).click();
+    });
+    act(() => {
+      screen.getByText('Kendi kategorin').click();
+    });
+    const field = screen.getByLabelText('ÜRÜNLER') as HTMLTextAreaElement;
+    expect(field.value).toBe('');
   });
 });
 

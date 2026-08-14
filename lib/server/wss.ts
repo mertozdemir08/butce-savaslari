@@ -1,4 +1,5 @@
-import type { Server } from 'node:http';
+import type { IncomingMessage, Server } from 'node:http';
+import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { dispatch, type Conn } from './dispatch';
 import { parseClientMessage, type ServerMessage } from './protocol';
@@ -21,8 +22,19 @@ export function attachGameServer(
   opts: { store?: RoomStore; path?: string } = {},
 ): GameServer {
   const store = opts.store ?? createRoomStore();
-  const wss = new WebSocketServer({ server, path: opts.path ?? '/ws' });
+  const path = opts.path ?? '/ws';
+  const wss = new WebSocketServer({ noServer: true });
   const conns = new Map<WebSocket, Conn>();
+
+  // Upgrade'i kendimiz suzuyoruz: yalnizca oyun yolunu aliyoruz, gerisini
+  // (dev modunda Next'in /_next/hmr soketi) sunucunun oteki dinleyicilerine
+  // birakiyoruz. `{ server, path }` secenegi eslesmeyen her upgrade'i 400 ile
+  // kapatirdi ve HMR'i oldururdu.
+  const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    if (new URL(req.url ?? '/', 'http://localhost').pathname !== path) return;
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+  };
+  server.on('upgrade', onUpgrade);
 
   function send(socket: WebSocket, message: ServerMessage): void {
     if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
@@ -111,6 +123,7 @@ export function attachGameServer(
     store,
     stop() {
       clearInterval(sweeper);
+      server.off('upgrade', onUpgrade);
       wss.close();
     },
   };
