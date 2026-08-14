@@ -378,6 +378,16 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       return { ok: true, state: resolved.state, events: [ev, ...resolved.events] };
     }
 
+    case 'ADVANCE': {
+      // Idempotent: sonuc koreografisi bitmediyse ya da bekleyen sonuc yoksa bos doner.
+      if (!state.resultUntil) return { ok: true, state, events: [] };
+      if (ctx.now.getTime() < new Date(state.resultUntil).getTime()) {
+        return { ok: true, state, events: [] };
+      }
+      const next = openNextLot(state, ctx);
+      return { ok: true, state: next.state, events: next.events };
+    }
+
     default:
       return err('WRONG_STATUS', 'Bu aksiyon henuz desteklenmiyor.');
   }
