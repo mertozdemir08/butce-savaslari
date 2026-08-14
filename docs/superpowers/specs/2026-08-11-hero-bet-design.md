@@ -1,4 +1,4 @@
-# Hero Bet — Tasarım Dokümanı
+# Bütçe Savaşları — Tasarım Dokümanı
 
 **Tarih:** 11 Ağustos 2026
 **Durum:** Onaylandı, uygulama planı bekliyor
@@ -9,7 +9,7 @@
 
 2-4 takımın aynı anda, kendi cihazlarından oynadığı bir açık artırma oyunu. Ortaya sırayla ürünler (kelimeler) çıkar, takımlar sınırlı bütçeleriyle teklif verir, herkesin alabileceği ürün sayısı sabittir. Oyun sonunda 3 veya daha fazla takım varsa kimin koleksiyonunun daha iyi olduğu oylanır.
 
-Vercel'de yayınlanır, herkes tarayıcıdan girer, kurulum gerektirmez.
+Kendi VPS'inizde, mevcut sitenizin bir alt alan adında yayınlanır. Herkes tarayıcıdan girer, kurulum gerektirmez.
 
 ### Kapsam dışı
 
@@ -102,100 +102,111 @@ Beraberlik sırasıyla şunlarla çözülür: en çok birincilik oyu → kalan b
 
 ## 3. Mimari
 
-Tek bir Next.js projesi, Vercel'e dağıtılır. Ayrı bir backend sunucusu yoktur.
+Tek bir Node süreci, kendi VPS'inizde Docker konteynerinde çalışır. Caddy alt alan adını bu konteynere yönlendirir ve TLS'i kendisi halleder.
 
 ```
-Tarayıcı ──POST /api/...──▶ Next.js Route Handler (Vercel)
-                                 │  1. odayı yükle
-                                 │  2. saf kural motoruna sor
-                                 │  3. sonucu yaz
-                                 ▼
-                           Supabase Postgres
-                                 │
-                                 └─ Realtime Broadcast ─▶ odadaki herkes
+Tarayıcı ──WebSocket──▶ Caddy (TLS) ──▶ Docker: butce-app
+                                          │
+                                          ├─ Next.js (arayüz)
+                                          ├─ WebSocket sunucusu
+                                          └─ Bellekte oda defteri
+                                               │
+                                               └─▶ odadaki herkese anlık görüntü
 ```
 
-**Yığın:** Next.js (App Router) + TypeScript + Tailwind v4. Supabase, bu oyuna ait **yeni bir projede** (mevcut Supabase projesiyle temas yok, kotalar ayrı).
+**Yığın:** Next.js (App Router, standalone çıktı) + TypeScript + Tailwind v4, özel bir Node sunucusu içinde. Docker + Caddy ile kendi VPS'te. Veritabanı yok.
 
-**Neden Vercel'e bir realtime servisi ekleniyor:** Vercel'in serverless fonksiyonları kalıcı WebSocket bağlantısı tutamaz. Supabase Realtime bu işi üstlenir.
+**Neden veritabanı yok:** Kalıcı olması gereken tek veri küratörlü kategori paketleri; onlar da repo içinde statik JSON ve görsel dosyası. Oyun durumu geçicidir ve oyun bitince silinir.
 
-**Neden Broadcast, postgres_changes değil:** Sunucu her aksiyondan sonra tam bir anlık görüntü yayınlar. İstemciler tablo şemasına bağlanmaz, RLS ile satır bazlı okuma izni kurgulamak gerekmez, ve yeniden bağlanan istemci tek istekle tam duruma kavuşur.
+**Neden WebSocket doğrudan bizde:** Süreç sürekli ayakta olduğu için kalıcı bağlantı tutabiliyor. Harici bir gerçek zamanlı servise (Supabase Realtime, Pusher) ihtiyaç yok.
+
+**Eşzamanlılık:** Tek süreç, tek olay döngüsü. Aksiyonlar doğal olarak sıraya girer; karşılaştır-ve-değiştir, sürüm sayacı ya da yeniden deneme döngüsü gerekmez. Bu, mimarinin en büyük sadeleşmesi.
 
 ### Kritik ayrım: saf kural motoru
 
-Tüm oyun kuralları veritabanı ve ağdan bağımsız saf bir fonksiyonda yaşar:
+Değişmedi. Tüm oyun kuralları veritabanı ve ağdan bağımsız saf bir fonksiyonda yaşar:
 
 ```ts
-applyAction(state: GameState, action: Action, now: Date)
+applyAction(state: GameState, action: Action, ctx: Ctx)
   → { state: GameState, events: GameEvent[] } | { error: RuleError }
 ```
 
-Route handler'lar incedir: isteği ayrıştır → durumu yükle → bu fonksiyonu çağır → kaydet → yayınla.
-
-Bunun getirisi: sıra ilerlemesi, eleme, otomatik pas, bedelsiz devir, oylama puanlaması gibi ince kuralların tamamı Supabase'e hiç bağlanmadan test edilebilir. Riskin tamamı bu modülde toplanır ve tamamı sınanabilir hale gelir.
-
-İstemciler veritabanına asla yazmaz.
+Bu ayrım sayesinde barındırma kararının değişmesi motoru hiç etkilemedi.
 
 ### 30 saniyelik sayacın otoritesi
 
-`lots.turn_deadline` sunucu zamanı olarak veritabanında tutulur. Tarayıcı geri sayımı bu andan hesaplar; anlık görüntüde sunucu saati de geldiği için istemci saat farkını düzeltir.
+`turn_deadline` sunucu zamanı olarak oda nesnesinde tutulur. Tarayıcı geri sayımı bu andan hesaplar; anlık görüntüyle sunucu saati de geldiği için istemci saat farkını düzeltir.
 
-Süre dolduğunda istemci `POST /api/rooms/[code]/timeout` çağırır ve elindeki `turn_seq` değerini gönderir. Sunucu tek bir transaction içinde "süre gerçekten doldu mu ve sıra hâlâ bu mu" diye bakar; uymuyorsa hiçbir şey yapmaz.
+Süre dolduğunda istemci `timeout` mesajı gönderir ve elindeki `turn_seq` değerini ekler. Sunucu "süre gerçekten doldu mu ve sıra hâlâ bu mu" diye bakar; uymuyorsa hiçbir şey yapmaz. Dört istemci aynı anda gönderse bile otomatik pas bir kez uygulanır, çünkü tek süreçte mesajlar sırayla işlenir.
 
-Bu sayede:
+### Oda ömrü
 
-- Dört istemci aynı anda çağırsa bile otomatik pas bir kez uygulanır.
-- Sekmesi donan oyuncu oyunu kilitleyemez; diğerleri tetikler.
-- Saati ileri alınmış bir istemci turu erken kapatamaz.
-
-`turn_seq` her sıra değişiminde artan bir sayaçtır ve aynı zamanda bayat isteklere karşı optimistic concurrency görevi görür.
+Odalar bellekte bir sözlükte durur. Bir süpürücü düzenli aralıklarla çalışır ve bitmiş ya da uzun süredir sessiz odaları siler. Konteyner yeniden başlarsa devam eden oyunlar sona erer; istemciler "oda bulunamadı" görür ve yeni oda kurar. Bu kabul edilmiş bir taviz: oyunlar 15-25 dakika sürüyor ve dağıtım zamanını siz seçiyorsunuz.
 
 ### Modül sınırları
 
 ```
-lib/game/          saf, bağımlılıksız
-  types.ts         GameState, Action, GameEvent, RuleError
-  rules.ts         applyAction — tüm oyun kuralları
-  scoring.ts       oylama puanlaması ve beraberlik çözümü
+lib/game/          saf, bağımlılıksız (değişmedi)
 lib/server/
-  rooms.ts         Supabase'den durum yükleme/yazma, Broadcast
-  auth.ts          session_token doğrulama
+  rooms.ts         bellekte oda defteri: kur, katıl, uygula, süpür
+  protocol.ts      istemci ve sunucu mesaj tipleri
+  wss.ts           WebSocket sunucusu, mesaj yönlendirme, yayın
+  codes.ts         oda kodu üretimi ve jeton
+server.ts          Next.js + WebSocket'i tek süreçte birleştiren giriş noktası
 lib/client/
-  useRoom.ts       abonelik, anlık görüntü, yedek yoklama
-app/api/rooms/...  ince route handler'lar
+  session.ts       localStorage: oda kodu -> takım jetonu
+  useRoom.ts       WebSocket bağlantısı, yeniden bağlanma, anlık görüntü
 components/        sunum bileşenleri, anlık görüntüden beslenir
-data/packs/        hazır kelime paketleri (JSON)
+data/packs/        küratörlü kategori paketleri (JSON)
+public/packs/      paket görselleri
 ```
-
----
 
 ## 4. Veri modeli
 
-| Tablo | Alanlar |
+Kalıcı depolama yok. İki tür veri var:
+
+**Küratörlü kategoriler (kalıcı, repo içinde).** `data/packs/*.json` dosyaları ve `public/packs/` altındaki görselleri. Yalnızca biz ekleriz; kategori eklemek bir commit ve yeniden dağıtım demektir. Host oyun kurarken bir paket seçer ya da kendi listesini yazar; her iki durumda da ürünler odanın kendi kopyasına geçer.
+
+**Oda durumu (geçici, bellekte).** Süreçte bir sözlük:
+
+```ts
+Map<string /* oda kodu */, Room>
+
+interface Room {
+  state: GameState;                    // saf motorun durumu
+  tokens: Record<TeamId, string>;      // cihaz-takım eşlemesi, asla yayınlanmaz
+  sockets: Map<WebSocket, TeamId | null>;
+  lastActivityAt: number;
+}
+```
+
+Oda kodu 4 karakter, karışan harfler (`0 O 1 I`) çıkarılmış alfabeden.
+
+### WebSocket protokolü
+
+İstemciden sunucuya:
+
+| Mesaj | Alanlar |
 |---|---|
-| `rooms` | `id`, `code` (benzersiz), `status` (`lobby` / `auction` / `voting` / `finished`), `budget`, `item_limit`, `turn_seconds`, `host_team_id`, `current_lot_id`, `created_at` |
-| `teams` | `id`, `room_id`, `name`, `seat` (0-3), `budget_left`, `items_won`, `session_token`, `connected` |
-| `items` | `id`, `room_id`, `name`, `image_url` (boş olabilir), `order_index` |
-| `lots` | `id`, `room_id`, `item_id`, `lot_no`, `status` (`open` / `sold`), `current_bid`, `current_bidder_team_id`, `turn_team_id`, `turn_seq`, `turn_deadline`, `opener_team_id`, `active_team_ids`, `winner_team_id`, `final_price` |
-| `bids` | `id`, `lot_id`, `team_id`, `amount` (pas'ta boş), `kind` (`bid` / `pass` / `auto_pass`), `created_at` |
-| `votes` | `id`, `room_id`, `voter_team_id`, `ranked_team_ids`, `created_at` |
+| `create` | takım adı, bütçe, ürün limiti, tur süresi, ürünler |
+| `join` | oda kodu, takım adı |
+| `resume` | oda kodu, takım id, jeton |
+| `start` | — |
+| `bid` | tutar, `turnSeq` |
+| `pass` | `turnSeq` |
+| `timeout` | `lotId`, `turnSeq` |
+| `advance` | — |
+| `vote` | sıralanmış takım id listesi |
 
-`teams.session_token` cihazı takıma bağlayan gizli değerdir; istemcide `localStorage`'da oda koduyla eşli saklanır.
+Sunucudan istemciye:
 
-### API yüzeyi
-
-| Rota | İş |
+| Mesaj | İçerik |
 |---|---|
-| `POST /api/rooms` | Oda kur, host takımını oluştur |
-| `POST /api/rooms/[code]/join` | Takım olarak katıl |
-| `POST /api/rooms/[code]/start` | Oyunu başlat (yalnızca host, en az 2 takım) |
-| `POST /api/rooms/[code]/bid` | Teklif ver |
-| `POST /api/rooms/[code]/pass` | Pas geç |
-| `POST /api/rooms/[code]/timeout` | Süre doldu, otomatik pas uygula |
-| `POST /api/rooms/[code]/vote` | Sıralamayı gönder |
-| `GET /api/rooms/[code]/snapshot` | Tam durum (ilk yükleme ve yeniden bağlanma) |
+| `welcome` | oda kodu, takım id, jeton (yalnızca `create`/`join` sonrası) |
+| `state` | tam anlık görüntü + sunucu saati |
+| `error` | kural hatası kodu ve mesajı |
 
----
+Her başarılı aksiyondan sonra sunucu odadaki tüm bağlantılara `state` yayınlar. Jetonlar hiçbir yayına dahil edilmez.
 
 ## 5. Görsel sistem
 
@@ -391,8 +402,11 @@ Route handler'lar ince olduğu için onlarda yalnızca sözleşme testi vardır:
 | 2 takımda kazanan yok | Tarafsız oy verecek kimse yok; tartışmayı masaya bırakır |
 | Asgari artış +1 | Bütçeler düşük (10 civarı), yüzde veya sabit adım fazla sert |
 | Teklifsiz lot son pas geçene bedelsiz | Lot hep sahip bulur; "son pas geçen olma" gerilimi yaratır |
-| Supabase, yeni proje | Tek satıcı, kotalar mevcut projeden ayrı |
-| Broadcast, postgres_changes değil | RLS kurgusu gerekmez, yeniden bağlanma tek istekte çözülür |
+| Kendi VPS, Docker + Caddy | Barındırma sizde; Vercel'in serverless kısıtı ortadan kalkıyor |
+| Veritabanı yok | Kalıcı tek veri küratörlü kategoriler; onlar da repo dosyası |
+| Oyun durumu bellekte | Oyunlar geçici; yeniden başlatma devam eden oyunu bitirir, kabul edildi |
+| Doğrudan WebSocket | Süreç sürekli ayakta; harici gerçek zamanlı servise gerek yok |
+| Tek süreç, CAS yok | Olay döngüsü aksiyonları zaten sıraya sokuyor |
 | Saf kural motoru | Riskin tamamı tek modülde ve tamamı test edilebilir |
 | Masaüstü öncelikli | Asıl kullanım masa başı; telefon tam destekli |
 | Adımlayıcı + MAX | Düşük bütçelerde sayı klavyesi yanlış araç |

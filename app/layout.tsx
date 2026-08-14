@@ -24,8 +24,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Hero Bet',
-  description: 'Takimlarin sinirli butceyle urun kapmaya calistigi acik artirma oyunu.',
+  title: 'Bütçe Savaşları',
+  description: 'Takımların sınırlı bütçeyle ürün kapmaya çalıştığı açık artırma oyunu.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
