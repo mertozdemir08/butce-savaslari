@@ -53,6 +53,8 @@ interface Props {
   item: Item;
   winner: Team;
   phase: number;
+  /** true ise bilet acik artirma ekranindaki boyutunu korur. */
+  fill?: boolean;
 }
 
 /**
@@ -60,9 +62,9 @@ interface Props {
  * prefers-reduced-motion altinda gecisler duser, sure korunur ki
  * herkes sonucu okuyabilsin.
  */
-export function LotResult({ lot, item, winner, phase }: Props) {
+export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
   return (
-    <div>
+    <div className={fill ? 'flex h-full min-h-0 flex-col' : ''}>
       {/* Bilet sonuna kadar okunabilir kalir. Once kaybolduruyorduk; sekme
           arkadaysa ya da faz gec baglanirsa hangi urunun satildigi
           anlasilmiyordu. Simdi yalnizca hafifce geri cekilir. */}
@@ -71,6 +73,7 @@ export function LotResult({ lot, item, winner, phase }: Props) {
         data-phase={String(phase)}
         className={[
           'origin-center transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          fill ? 'min-h-0 flex-1' : '',
           phase >= 1 && phase < 3 ? 'motion-safe:scale-[1.02]' : '',
           phase >= 3 ? 'motion-safe:scale-[0.97]' : '',
         ].join(' ')}
@@ -80,6 +83,7 @@ export function LotResult({ lot, item, winner, phase }: Props) {
           item={item}
           bidderName={`TAKIM ${winner.name}`}
           stamp={phase >= 1 ? { text: stampText(lot, winner) } : null}
+          fill={fill}
         />
       </div>
 
@@ -87,7 +91,7 @@ export function LotResult({ lot, item, winner, phase }: Props) {
         <p
           data-testid="winner-callout"
           role="status"
-          className="mt-5 font-[family-name:var(--font-display)] text-[28px] font-extrabold uppercase leading-none motion-safe:animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
+          className="mt-4 shrink-0 text-center font-[family-name:var(--font-display)] text-[28px] font-extrabold uppercase leading-none motion-safe:animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
         >
           {`TAKIM ${winner.name} aldı`}
         </p>

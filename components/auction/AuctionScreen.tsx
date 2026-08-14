@@ -85,7 +85,7 @@ export function AuctionScreen({
         <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[1fr_340px] md:overflow-hidden">
           <section className="flex min-h-0 flex-col border-b border-[var(--color-line)] px-4 py-5 md:border-b-0 md:border-r md:px-8 md:py-7">
             {result ? (
-              <div className="flex min-h-0 flex-1 items-center">{result}</div>
+              <div className="min-h-0 flex-1">{result}</div>
             ) : (
               <>
                 <div className="min-h-0 flex-1">

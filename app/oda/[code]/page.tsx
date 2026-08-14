@@ -121,7 +121,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         errorMessage={error}
         result={
           showingResult && item && winner ? (
-            <LotResult lot={lot} item={item} winner={winner} phase={resultPhase} />
+            <LotResult lot={lot} item={item} winner={winner} phase={resultPhase} fill />
           ) : null
         }
         onBid={onBid}
