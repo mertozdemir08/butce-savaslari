@@ -54,7 +54,7 @@ export function AuctionScreen({
       <div className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col">
         <header className="flex shrink-0 items-stretch border-b border-[var(--color-line)]">
           <div className="flex items-center border-r border-[var(--color-line)] px-4 py-3 font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[0.06em] text-[var(--color-mute)] md:px-6">
-            LOT
+            ÜRÜN
             <b className="mx-1.5 text-[26px] text-[var(--color-text)]">
               {String(lot.lotNo).padStart(2, '0')}
             </b>

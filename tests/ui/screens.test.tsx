@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
+
+// ResultScreen next/navigation kullaniyor; jsdom'da router monte degil.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 import { BidBar } from '@/components/auction/BidBar';
 import { stampText } from '@/components/auction/LotResult';
 import { VoteScreen } from '@/components/vote/VoteScreen';

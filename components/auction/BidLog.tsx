@@ -16,12 +16,12 @@ export function BidLog({ lot, teams }: { lot: Lot; teams: Team[] }) {
   return (
     <div className="border-t border-[var(--color-line)] px-4 py-3">
       <div className="mb-1.5 font-[family-name:var(--font-mono)] text-[9px] tracking-[0.2em] text-[var(--color-mute)]">
-        BU LOTTA
+        BU ÜRÜNDE
       </div>
 
       {rows.length === 0 ? (
         <p className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-mute)]">
-          Henüz hamle yok.
+          Henüz teklif yok.
         </p>
       ) : (
         <ul className="font-[family-name:var(--font-mono)] text-[11px] leading-[1.9]">

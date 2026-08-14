@@ -9,18 +9,18 @@ import { CODE_LENGTH, DEFAULT_BUDGET, DEFAULT_ITEM_LIMIT, DEFAULT_TURN_SECONDS }
 const STEPS = [
   {
     n: '01',
-    title: 'Ortaya bir lot çıkar',
-    body: 'Sırayla ürünler açık artırmaya girer. Görseli varsa bilette görünür.',
+    title: 'Ortaya bir ürün çıkar',
+    body: 'Sırayla ürünler açık artırmaya çıkar. Görseli varsa bilette görünür.',
   },
   {
     n: '02',
     title: 'Sıra sende, 30 saniyen var',
-    body: 'Ya artırırsın ya pas geçersin. Pas geçtiysen o lota bir daha giremezsin.',
+    body: 'Ya artırırsın ya pas geçersin. Pas geçtiysen o ürüne bir daha giremezsin.',
   },
   {
     n: '03',
-    title: 'Son kalan lotu alır',
-    body: 'Kimse artırmazsa lot en son pas geçene bedelsiz kalır. Kimse istemediği şeyle kalmak istemez.',
+    title: 'Son pas geçen alır',
+    body: 'Kimse artırmazsa ürün en son pas geçene bedelsiz kalır. Kimse istemediği şeyle kalmak istemez.',
   },
   {
     n: '04',

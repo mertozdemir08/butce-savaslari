@@ -70,7 +70,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
 
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.2em] text-[var(--color-mute)]">
-            {`LOT NO. ${lotNo}`}
+            {`ÜRÜN ${lotNo}`}
           </span>
 
           <h2

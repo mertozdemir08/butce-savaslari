@@ -1,5 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { clearSession } from '@/lib/client/session';
 import { tally } from '@/lib/game/scoring';
 import type { GameState, Team } from '@/lib/game/types';
 import { wonItems } from './collection';
@@ -9,6 +12,7 @@ import { wonItems } from './collection';
  * kazanan ilan edilmez, iki koleksiyon yan yana sergilenir.
  */
 export function ResultScreen({ state, me }: { state: GameState; me: Team | null }) {
+  const router = useRouter();
   const standings = tally(state);
   const showWinner = state.teams.length >= 3 && state.votes.length > 0;
   const winner = showWinner ? state.teams.find((t) => t.id === standings[0].teamId) : null;
@@ -98,6 +102,28 @@ export function ResultScreen({ state, me }: { state: GameState; me: Team | null 
           İki koleksiyon karşınızda. Karar sizin.
         </p>
       )}
+
+      <div className="mt-auto flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row">
+        <Button
+          className="sm:flex-1"
+          onClick={() => {
+            clearSession(state.code);
+            router.push('/kur');
+          }}
+        >
+          YENİ OYUN KUR
+        </Button>
+        <Button
+          variant="ghost"
+          className="sm:flex-1"
+          onClick={() => {
+            clearSession(state.code);
+            router.push('/');
+          }}
+        >
+          ANA SAYFA
+        </Button>
+      </div>
     </main>
   );
 }

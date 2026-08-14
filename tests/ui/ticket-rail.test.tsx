@@ -48,7 +48,7 @@ describe('LotTicket', () => {
 
   it('lot numarasini ve urun adini gosterir', () => {
     render(<LotTicket lot={lotOf()} item={item} bidderName="TAKIM B" />);
-    expect(screen.getByText('LOT NO. 07')).toBeTruthy();
+    expect(screen.getByText('ÜRÜN 07')).toBeTruthy();
     expect(screen.getByText('Ev')).toBeTruthy();
   });
 
@@ -203,6 +203,6 @@ describe('TeamRail', () => {
 
   it('kutuk bos oldugunda bos durum yazar', () => {
     render(<TeamRail state={stateOf([team('t-a', 'A', 0)])} lot={lotOf()} meId="t-a" />);
-    expect(screen.getByText('Henüz hamle yok.')).toBeTruthy();
+    expect(screen.getByText('Henüz teklif yok.')).toBeTruthy();
   });
 });

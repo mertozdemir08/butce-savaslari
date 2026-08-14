@@ -63,15 +63,16 @@ interface Props {
 export function LotResult({ lot, item, winner, phase }: Props) {
   return (
     <div>
+      {/* Bilet sonuna kadar okunabilir kalir. Once kaybolduruyorduk; sekme
+          arkadaysa ya da faz gec baglanirsa hangi urunun satildigi
+          anlasilmiyordu. Simdi yalnizca hafifce geri cekilir. */}
       <div
         data-testid="result-ticket"
         data-phase={String(phase)}
         className={[
-          'origin-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'origin-center transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
           phase >= 1 && phase < 3 ? 'motion-safe:scale-[1.02]' : '',
-          phase >= 3
-            ? 'motion-safe:translate-x-8 motion-safe:scale-[0.9] motion-safe:opacity-0'
-            : '',
+          phase >= 3 ? 'motion-safe:scale-[0.97]' : '',
         ].join(' ')}
       >
         <LotTicket

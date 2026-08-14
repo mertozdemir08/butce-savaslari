@@ -2,21 +2,69 @@
   "id": "hayatin-temelleri",
   "name": "Hayatın Temelleri",
   "items": [
-    { "name": "Ev" },
-    { "name": "Araba" },
-    { "name": "Sağlık" },
-    { "name": "Aşk" },
-    { "name": "Şöhret" },
-    { "name": "Zaman" },
-    { "name": "Huzur" },
-    { "name": "Arkadaşlık" },
-    { "name": "Bilgi" },
-    { "name": "Özgürlük" },
-    { "name": "Güven" },
-    { "name": "Yetenek" },
-    { "name": "Şans" },
-    { "name": "İtibar" },
-    { "name": "Miras" },
-    { "name": "Uyku" }
+    {
+      "name": "Ev",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Araba",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Sağlık",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Aşk",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Şöhret",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Zaman",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Huzur",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Arkadaşlık",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Bilgi",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Özgürlük",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Güven",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Yetenek",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Şans",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "İtibar",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Miras",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    },
+    {
+      "name": "Uyku",
+      "imageUrl": "/packs/hayatin-temelleri/ornek.svg"
+    }
   ]
 }
