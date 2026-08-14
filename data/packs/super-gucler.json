@@ -1,0 +1,22 @@
+{
+  "id": "super-gucler",
+  "name": "Süper Güçler",
+  "items": [
+    { "name": "Uçmak" },
+    { "name": "Görünmezlik" },
+    { "name": "Zaman yolculuğu" },
+    { "name": "Düşünce okuma" },
+    { "name": "Işınlanma" },
+    { "name": "Ölümsüzlük" },
+    { "name": "Sonsuz güç" },
+    { "name": "Şekil değiştirme" },
+    { "name": "Hava kontrolü" },
+    { "name": "Hayvanlarla konuşmak" },
+    { "name": "İyileştirme" },
+    { "name": "Geleceği görmek" },
+    { "name": "Işık hızı" },
+    { "name": "Ateş kontrolü" },
+    { "name": "Rüyalara girmek" },
+    { "name": "Hafıza silmek" }
+  ]
+}

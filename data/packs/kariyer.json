@@ -1,0 +1,22 @@
+{
+  "id": "kariyer",
+  "name": "Kariyer",
+  "items": [
+    { "name": "Kendi şirketin" },
+    { "name": "Nobel ödülü" },
+    { "name": "Erken emeklilik" },
+    { "name": "Terfi" },
+    { "name": "Uzaktan çalışma" },
+    { "name": "Mentor" },
+    { "name": "Yatırımcı" },
+    { "name": "Patent" },
+    { "name": "Ekip" },
+    { "name": "Köşe ofis" },
+    { "name": "Sınırsız izin" },
+    { "name": "Unvan" },
+    { "name": "Hisse" },
+    { "name": "Bağımsızlık" },
+    { "name": "Deneyim" },
+    { "name": "İtibarlı imza" }
+  ]
+}

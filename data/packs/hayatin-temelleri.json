@@ -1,0 +1,22 @@
+{
+  "id": "hayatin-temelleri",
+  "name": "Hayatın Temelleri",
+  "items": [
+    { "name": "Ev" },
+    { "name": "Araba" },
+    { "name": "Sağlık" },
+    { "name": "Aşk" },
+    { "name": "Şöhret" },
+    { "name": "Zaman" },
+    { "name": "Huzur" },
+    { "name": "Arkadaşlık" },
+    { "name": "Bilgi" },
+    { "name": "Özgürlük" },
+    { "name": "Güven" },
+    { "name": "Yetenek" },
+    { "name": "Şans" },
+    { "name": "İtibar" },
+    { "name": "Miras" },
+    { "name": "Uyku" }
+  ]
+}
