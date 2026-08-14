@@ -42,7 +42,7 @@ export function createGame(input: CreateGameInput): GameState {
 export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyResult {
   switch (action.type) {
     case 'JOIN': {
-      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun baslamis.');
+      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun başlamış.');
       if (state.teams.length >= MAX_TEAMS) return err('ROOM_FULL', 'Oda dolu.');
       const seat = state.teams.length;
       return {
@@ -66,34 +66,34 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
     }
 
     case 'SET_ITEMS': {
-      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun baslamis.');
-      if (action.byTeamId !== state.hostTeamId) return err('NOT_HOST', 'Yalnizca oda sahibi.');
+      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun başlamış.');
+      if (action.byTeamId !== state.hostTeamId) return err('NOT_HOST', 'Yalnızca oda sahibi.');
       return { ok: true, state: { ...state, items: action.items }, events: [] };
     }
 
     case 'START_GAME': {
-      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun baslamis.');
-      if (action.byTeamId !== state.hostTeamId) return err('NOT_HOST', 'Yalnizca oda sahibi.');
-      if (state.teams.length < MIN_TEAMS) return err('NOT_ENOUGH_TEAMS', 'En az 2 takim gerekli.');
-      if (state.items.length === 0) return err('NO_ITEMS', 'Urun listesi bos.');
+      if (state.status !== 'lobby') return err('WRONG_STATUS', 'Oyun başlamış.');
+      if (action.byTeamId !== state.hostTeamId) return err('NOT_HOST', 'Yalnızca oda sahibi.');
+      if (state.teams.length < MIN_TEAMS) return err('NOT_ENOUGH_TEAMS', 'En az 2 takım gerekli.');
+      if (state.items.length === 0) return err('NO_ITEMS', 'Ürün listesi boş.');
       const started = openNextLot({ ...state, status: 'auction' }, ctx);
       return { ok: true, state: started.state, events: started.events };
     }
 
     case 'BID': {
-      if (state.status !== 'auction') return err('WRONG_STATUS', 'Acik artirma surmuyor.');
+      if (state.status !== 'auction') return err('WRONG_STATUS', 'Açık artırma sürmüyor.');
       const lot = openLot(state);
-      if (!lot) return err('LOT_NOT_OPEN', 'Acik lot yok.');
-      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sira sizde degil.');
-      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur gecti.');
+      if (!lot) return err('LOT_NOT_OPEN', 'Açık lot yok.');
+      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sıra sizde değil.');
+      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur geçti.');
 
       const team = findTeam(state, action.teamId);
-      if (!team) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+      if (!team) return err('UNKNOWN_TEAM', 'Takım bulunamadı.');
       if (!Number.isInteger(action.amount) || action.amount < minBid(lot)) {
         return err('BID_TOO_LOW', `En az ${minBid(lot)} verilmeli.`);
       }
       if (action.amount > team.budgetLeft) {
-        return err('BID_OVER_BUDGET', `Butceniz ${team.budgetLeft}.`);
+        return err('BID_OVER_BUDGET', `Bütçeniz ${team.budgetLeft}.`);
       }
 
       const bidded = withLot(state, {
@@ -117,14 +117,14 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
     }
 
     case 'PASS': {
-      if (state.status !== 'auction') return err('WRONG_STATUS', 'Acik artirma surmuyor.');
+      if (state.status !== 'auction') return err('WRONG_STATUS', 'Açık artırma sürmüyor.');
       const lot = openLot(state);
-      if (!lot) return err('LOT_NOT_OPEN', 'Acik lot yok.');
-      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sira sizde degil.');
-      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur gecti.');
+      if (!lot) return err('LOT_NOT_OPEN', 'Açık lot yok.');
+      if (lot.turnTeamId !== action.teamId) return err('NOT_YOUR_TURN', 'Sıra sizde değil.');
+      if (lot.turnSeq !== action.turnSeq) return err('STALE_TURN', 'Bu tur geçti.');
 
       const team = findTeam(state, action.teamId);
-      if (!team) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+      if (!team) return err('UNKNOWN_TEAM', 'Takım bulunamadı.');
 
       const passed = withLot(state, {
         ...lot,
@@ -181,8 +181,8 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
     }
 
     case 'VOTE': {
-      if (state.status !== 'voting') return err('WRONG_STATUS', 'Oylama asamasi degil.');
-      if (!findTeam(state, action.teamId)) return err('UNKNOWN_TEAM', 'Takim bulunamadi.');
+      if (state.status !== 'voting') return err('WRONG_STATUS', 'Oylama aşaması değil.');
+      if (!findTeam(state, action.teamId)) return err('UNKNOWN_TEAM', 'Takım bulunamadı.');
       if (state.votes.some((v) => v.voterTeamId === action.teamId)) {
         return err('ALREADY_VOTED', 'Zaten oy verdiniz.');
       }
@@ -195,7 +195,7 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
       const sameSet =
         expected.length === given.length && expected.every((id, i) => id === given[i]);
       if (!sameSet) {
-        return err('INVALID_RANKING', 'Kendiniz disindaki tum takimlar bir kez siralanmali.');
+        return err('INVALID_RANKING', 'Kendiniz dışındaki tüm takımlar bir kez sıralanmalı.');
       }
 
       const votes = [
@@ -211,6 +211,6 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
     }
 
     default:
-      return err('WRONG_STATUS', 'Bu aksiyon henuz desteklenmiyor.');
+      return err('WRONG_STATUS', 'Bu işlem desteklenmiyor.');
   }
 }
