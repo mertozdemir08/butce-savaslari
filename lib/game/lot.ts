@@ -79,6 +79,14 @@ export function resolveTurn(
   for (let guard = 0; guard <= n; guard++) {
     const lot = s.lots.find((l) => l.id === lotId)!;
 
+    // Teklif yokken tek aday kaldiysa lot zaten ona kalacak: teklif verse de
+    // pas gecse de urun onun, tek fark bosa harcanan para. Tur acmak yerine
+    // lotu burada kapatip bedelsiz devrediyoruz.
+    if (lot.currentBid === null && lot.activeTeamIds.length === 1) {
+      const closed = closeLot(s, lotId, ctx);
+      return { state: closed.state, events: [...events, ...closed.events] };
+    }
+
     let candidate = null as null | { id: string; seat: number };
     for (let offset = 0; offset < n; offset++) {
       const seat = (cursor + offset) % n;
@@ -148,20 +156,29 @@ function closeLot(
     price = lot.currentBid;
     free = false;
   } else {
-    // Teklif yok: en son pas gecen takim devralir.
-    const lastPass = [...lot.log].reverse().find((r) => r.kind !== 'bid');
-    const startSeat = lastPass ? findTeam(state, lastPass.teamId)!.seat : state.openerSeat;
-    const n = state.teams.length;
-    let recipient = null as null | string;
-    for (let i = 0; i < n; i++) {
-      const t = teamAtSeat(state, (startSeat + i) % n)!;
-      if (hasRoom(t, state)) {
-        recipient = t.id;
-        break;
+    // Teklif yok. Hala aktif takim varsa lot erken kapanmistir (tek aday
+    // kalmisti): urun onundur. Herkes pas gectiyse en son pas gecen devralir.
+    const stillActive = lot.activeTeamIds
+      .map((id) => findTeam(state, id)!)
+      .sort((a, b) => a.seat - b.seat)[0];
+
+    if (stillActive) {
+      winnerId = stillActive.id;
+    } else {
+      const lastPass = [...lot.log].reverse().find((r) => r.kind !== 'bid');
+      const startSeat = lastPass ? findTeam(state, lastPass.teamId)!.seat : state.openerSeat;
+      const n = state.teams.length;
+      let recipient = null as null | string;
+      for (let i = 0; i < n; i++) {
+        const t = teamAtSeat(state, (startSeat + i) % n)!;
+        if (hasRoom(t, state)) {
+          recipient = t.id;
+          break;
+        }
       }
+      // openNextLot en az bir takimin yeri oldugunu garanti eder.
+      winnerId = recipient!;
     }
-    // openNextLot en az bir takimin yeri oldugunu garanti eder.
-    winnerId = recipient!;
     price = 0;
     free = true;
   }

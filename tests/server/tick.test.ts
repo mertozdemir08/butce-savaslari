@@ -12,13 +12,15 @@ const items: Item[] = Array.from({ length: 3 }, (_, i) => ({
 
 const TURN_SECONDS = 30;
 
-/** Iki takimla acik artirmaya baslamis bir oda ve saati elle suren defter. */
-function startedRoom() {
+/** Acik artirmaya baslamis bir oda ve saati elle suren defter. */
+function startedRoom(teamCount = 2) {
   const nowRef = { value: 1_000_000 };
   const store = createRoomStore({ now: () => nowRef.value });
   const { room, teamId } = store.create({ teamName: 'A', items, turnSeconds: TURN_SECONDS });
-  const guest = store.join(room.code, 'B');
-  if ('code' in guest) throw new Error('join basarisiz');
+  for (const name of ['B', 'C', 'D'].slice(0, teamCount - 1)) {
+    const guest = store.join(room.code, name);
+    if ('code' in guest) throw new Error('join basarisiz');
+  }
 
   const started = store.apply(room.code, teamId, { type: 'START_GAME', byTeamId: teamId });
   if (!started.ok) throw new Error(`START_GAME basarisiz: ${started.error.code}`);
@@ -34,7 +36,8 @@ describe('tickRooms', () => {
   });
 
   it('tur suresi dolunca istemci olmadan sirayi ilerletir', () => {
-    const { store, code, nowRef } = startedRoom();
+    // Uc takim: A'nin suresi dolunca hala iki aday kalir, lot kapanmaz.
+    const { store, code, nowRef } = startedRoom(3);
     const before = currentLot(store.get(code)!.state)!;
 
     nowRef.value += TURN_SECONDS * 1000;
@@ -48,11 +51,10 @@ describe('tickRooms', () => {
   it('sonuc suresi dolunca sonraki lotu istemci olmadan acar', () => {
     const { store, code, nowRef } = startedRoom();
 
-    // Iki takim da pas gecer: lot bedelsiz kapanir ve sonuc suresi baslar.
-    for (let i = 0; i < 2; i++) {
-      nowRef.value += TURN_SECONDS * 1000;
-      tickRooms(store, nowRef.value);
-    }
+    // A'nin suresi dolar; geriye tek aday olarak B kalir ve lot bedelsiz
+    // kapanir, sonuc suresi baslar.
+    nowRef.value += TURN_SECONDS * 1000;
+    tickRooms(store, nowRef.value);
 
     const sold = store.get(code)!.state;
     expect(sold.resultUntil).not.toBeNull();

@@ -236,6 +236,31 @@ describe('VoteScreen', () => {
     expect(screen.getByTestId('vote-progress').textContent).toContain('3 TAKIMDAN 1');
     expect(screen.queryByRole('button', { name: /SIRALAMAYI ONAYLA/i })).toBeNull();
   });
+
+  it('bir takimin kazandigi urunlerin hepsini yazar, kirpip +N yazmaz', () => {
+    // B dort urun almis olsun: karar bu listeye dayaniyor, hepsi gorunmeli.
+    const many = stateOf(teams, {
+      status: 'voting',
+      items: ['Ev', 'Araba', 'Şöhret', 'Zaman'].map((name, i) => ({
+        id: `i-${i + 1}`,
+        name,
+        imageUrl: null,
+      })),
+      lots: ['i-1', 'i-2', 'i-3', 'i-4'].map((itemId, i) =>
+        soldLot(`l-${i + 1}`, itemId, 't-b', 0),
+      ),
+    });
+
+    render(<VoteScreen state={many} me={teams[0]} error={null} onVote={() => {}} />);
+    const row = screen
+      .getAllByTestId('vote-row')
+      .find((el) => el.textContent?.includes('TAKIM B'))!;
+
+    for (const name of ['Ev', 'Araba', 'Şöhret', 'Zaman']) {
+      expect(row.textContent, name).toContain(name);
+    }
+    expect(row.textContent).not.toContain('+');
+  });
 });
 
 describe('ResultScreen', () => {

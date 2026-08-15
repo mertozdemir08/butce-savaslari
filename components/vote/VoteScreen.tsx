@@ -12,11 +12,11 @@ interface Props {
   onVote: (rankedTeamIds: string[]) => void;
 }
 
-/** Kazanilan urunler, bilet seridi olarak. */
+/**
+ * Kazanilan urunler, bilet seridi olarak. Oy verirken karar bu listeye
+ * dayaniyor, o yuzden hepsi yazilir; kirpilmis liste yanlis oya yol aciyordu.
+ */
 function TicketStrip({ names }: { names: string[] }) {
-  const shown = names.slice(0, 3);
-  const rest = names.length - shown.length;
-
   if (names.length === 0) {
     return (
       <span className="mt-1.5 block font-[family-name:var(--font-mono)] text-[8.5px] tracking-[0.1em] text-[var(--color-mute)]">
@@ -27,7 +27,7 @@ function TicketStrip({ names }: { names: string[] }) {
 
   return (
     <div className="mt-1.5 flex flex-wrap gap-[3px]">
-      {shown.map((name, i) => (
+      {names.map((name, i) => (
         <span
           key={`${name}-${i}`}
           className="rounded-[2px] bg-[var(--color-text)] px-1.5 py-[2px] font-[family-name:var(--font-mono)] text-[8.5px] uppercase tracking-[0.04em] text-[var(--color-bg)]"
@@ -35,11 +35,6 @@ function TicketStrip({ names }: { names: string[] }) {
           {name}
         </span>
       ))}
-      {rest > 0 && (
-        <span className="rounded-[2px] border border-[var(--color-line)] px-1.5 py-[2px] font-[family-name:var(--font-mono)] text-[8.5px] text-[var(--color-mute)]">
-          {`+${rest}`}
-        </span>
-      )}
     </div>
   );
 }

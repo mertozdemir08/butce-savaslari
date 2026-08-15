@@ -64,7 +64,7 @@ interface Props {
  */
 export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
   return (
-    <div className={fill ? 'flex h-full min-h-0 flex-col' : ''}>
+    <div className={fill ? 'flex flex-col md:h-full md:min-h-0' : ''}>
       {/* Bilet sonuna kadar okunabilir kalir. Once kaybolduruyorduk; sekme
           arkadaysa ya da faz gec baglanirsa hangi urunun satildigi
           anlasilmiyordu. Simdi yalnizca hafifce geri cekilir. */}
@@ -73,7 +73,7 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
         data-phase={String(phase)}
         className={[
           'origin-center transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
-          fill ? 'min-h-0 flex-1' : '',
+          fill ? 'md:min-h-0 md:flex-1' : '',
           phase >= 1 && phase < 3 ? 'motion-safe:scale-[1.02]' : '',
           phase >= 3 ? 'motion-safe:scale-[0.97]' : '',
         ].join(' ')}

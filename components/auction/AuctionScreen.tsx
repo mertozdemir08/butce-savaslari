@@ -83,12 +83,15 @@ export function AuctionScreen({
         </header>
 
         <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[1fr_340px] md:overflow-hidden">
-          <section className="flex min-h-0 flex-col border-b border-[var(--color-line)] px-4 py-5 md:border-b-0 md:border-r md:px-8 md:py-7">
+          {/* min-h-0 yalnizca masaustunde: telefonda govde kaydigi icin bu
+              satirin kendi icerigine sigmasi gerekir, yoksa bilet ve teklif
+              cubugu alttaki takim rayinin uzerine tasiyor. */}
+          <section className="flex flex-col border-b border-[var(--color-line)] px-4 py-5 md:min-h-0 md:border-b-0 md:border-r md:px-8 md:py-7">
             {result ? (
-              <div className="min-h-0 flex-1">{result}</div>
+              <div className="md:min-h-0 md:flex-1">{result}</div>
             ) : (
               <>
-                <div className="min-h-0 flex-1">
+                <div className="md:min-h-0 md:flex-1">
                   <LotTicket
                     lot={lot}
                     item={item}
@@ -125,7 +128,7 @@ export function AuctionScreen({
             )}
           </section>
 
-          <aside className="min-h-0 md:overflow-hidden">
+          <aside className="md:min-h-0 md:overflow-hidden">
             <div className="hidden h-full md:block">
               <TeamRail state={state} lot={lot} meId={me?.id ?? null} fill />
             </div>

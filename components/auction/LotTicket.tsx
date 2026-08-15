@@ -9,7 +9,11 @@ interface Props {
   bidderName: string | null;
   /** Lot kapandiginda basilan damga. */
   stamp?: { text: string } | null;
-  /** true ise bilet kalan dikey alani doldurur (masaustu acik artirma ekrani). */
+  /**
+   * true ise bilet masaustunde kalan dikey alani doldurur. Telefonda dolgu
+   * yok: orada govde kayar, sabit yukseklik verilirse bilet kendi icerigine
+   * sigmayip altindaki teklif cubugunun uzerine tasiyordu.
+   */
   fill?: boolean;
 }
 
@@ -42,7 +46,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
     <div
       className={[
         'relative flex flex-col rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 md:p-[18px]',
-        fill ? 'h-full min-h-0' : '',
+        fill ? 'md:h-full md:min-h-0' : '',
       ].join(' ')}
     >
       <Notch side="left" />
@@ -56,7 +60,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
       <div
         className={[
           'relative mt-2 flex w-full shrink-0 items-center justify-center overflow-hidden rounded-[3px] bg-[#1d1d1d]',
-          fill ? 'min-h-[120px] flex-1' : 'h-[150px]',
+          fill ? 'h-[30vh] min-h-[140px] md:h-auto md:min-h-[120px] md:flex-1' : 'h-[150px]',
         ].join(' ')}
       >
         {item.imageUrl ? (
@@ -85,7 +89,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
             className={[
               'absolute inset-0 flex items-center justify-center',
               'font-[family-name:var(--font-display)] font-extrabold text-[var(--color-line)]',
-              fill ? 'text-[26vh]' : 'text-[54px]',
+              fill ? 'text-[16vh] md:text-[26vh]' : 'text-[54px]',
             ].join(' ')}
           >
             {lotNo}

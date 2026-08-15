@@ -95,7 +95,7 @@ describe('START_GAME', () => {
     expect(r.events.map((e) => e.type)).toEqual(['LOT_OPENED', 'TURN_CHANGED']);
   });
 
-  it('limiti dolu takimi lot acilisinda eler, siraya sokmaz', () => {
+  it('limiti dolu takimi lot acilisinda eler; tek aday kalirsa urunu bedelsiz alir', () => {
     let s = game({ itemLimit: 1 });
     s = {
       ...s,
@@ -112,8 +112,12 @@ describe('START_GAME', () => {
 
     const lot = r.state.lots[0];
     expect(lot.activeTeamIds).toEqual(['t-b']);
-    expect(lot.turnTeamId).toBe('t-b');
-    expect(lot.openerTeamId).toBe('t-b');
+    // Rakip yok: B'ye sira acilmaz, urun bedelsiz onun olur.
+    expect(lot.status).toBe('sold');
+    expect(lot.winnerTeamId).toBe('t-b');
+    expect(lot.finalPrice).toBe(0);
+    expect(lot.turnTeamId).toBeNull();
+    expect(r.state.teams.find((t) => t.id === 't-b')!.budgetLeft).toBe(10);
   });
 
   it('teklif gelmezse lot en son pas gecen takima bedelsiz gider', () => {
@@ -132,9 +136,10 @@ describe('START_GAME', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
 
+    // A ve B parasi yetmedigi icin otomatik pas gecti; geriye tek aday olarak
+    // C kaldi ve lot ona sira acilmadan kapandi.
     expect(r.events.map((e) => e.type)).toEqual([
       'LOT_OPENED',
-      'TEAM_PASSED',
       'TEAM_PASSED',
       'TEAM_PASSED',
       'LOT_SOLD',
