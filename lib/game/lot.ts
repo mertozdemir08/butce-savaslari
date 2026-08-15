@@ -1,6 +1,6 @@
 import { MIN_VOTING_TEAMS, RESULT_MS } from './constants';
 import { canAfford, findTeam, hasRoom, teamAtSeat, withLot, withTeam } from './helpers';
-import type { Ctx, GameEvent, GameState, Lot } from './types';
+import type { Ctx, GameEvent, GameState, Lot, Team } from './types';
 
 /**
  * Lot yasam dongusu gecisleri.
@@ -9,6 +9,23 @@ import type { Ctx, GameEvent, GameState, Lot } from './types';
  * kimin elendigi ve lotun kime kaldigi. applyAction bu fonksiyonlari
  * cagirir; buradan applyAction'a geri bir bagimlilik YOKTUR.
  */
+
+/**
+ * Lotu acan takim: acilis koltugundan baslayarak yeri olan ilk takim.
+ *
+ * Butcesi yetmedigi icin otomatik pas gecilecek takimlar da sayilir. Bedelsiz
+ * devir bu takima yazildigi icin onemli: sayilmasaydi parasi biten takim bir
+ * daha hic devir alamaz, oyunun disina duserdi.
+ *
+ * Yalnizca openNextLot cagirir; oradaki "yer kalmadi" denetimi bir takimin
+ * mutlaka bulunmasini garanti eder.
+ */
+function openerOf(state: GameState, startSeat: number): Team {
+  const n = state.teams.length;
+  return Array.from({ length: n }, (_, i) => teamAtSeat(state, (startSeat + i) % n)!).find((t) =>
+    hasRoom(t, state),
+  )!;
+}
 
 /** Sonraki lotu acar; urun ya da yer kalmadiysa oyunu bitirir. */
 export function openNextLot(state: GameState, ctx: Ctx): { state: GameState; events: GameEvent[] } {
@@ -29,7 +46,7 @@ export function openNextLot(state: GameState, ctx: Ctx): { state: GameState; eve
     turnTeamId: null,
     turnSeq: 0,
     turnDeadline: null,
-    openerTeamId: null,
+    openerTeamId: openerOf(state, startSeat).id,
     activeTeamIds: state.teams
       .filter((t) => hasRoom(t, state))
       .sort((a, b) => a.seat - b.seat)
@@ -117,7 +134,6 @@ export function resolveTurn(
       turnTeamId: team.id,
       turnSeq: lot.turnSeq + 1,
       turnDeadline: deadline,
-      openerTeamId: lot.openerTeamId ?? team.id,
     };
     s = withLot(s, turned);
     events.push({ type: 'TURN_CHANGED', lotId, teamId: team.id, deadline });
@@ -130,13 +146,16 @@ export function resolveTurn(
 
 /**
  * Lotu kapatir. Teklif varsa teklif sahibine satar; hic teklif gelmediyse
- * urun yanar ve kimseye gitmez.
+ * urun acan takima bedelsiz yazilir.
  *
- * Yanma kurali, "en son pas gecen bedelsiz alir" kuralinin yerini aldi.
- * Eskisi 3+ takimda calisiyordu ama 2 takimda bozuluyordu: acan takim pas
- * gecince urun otomatik digerine kaliyor, ikinci takim hic karar vermiyordu.
- * Simdi pas gecmek gercek bir secim — isteyen en az 1 verip alir, kimse
- * vermezse urun elenir.
+ * Bedelsiz devir bir sure "urun yanar, kimseye gitmez" kuralina birakmisti;
+ * o kural pas gecmeyi bedelsiz hale getiriyordu. Simdi pas gecmek bir kumar:
+ * rakip de pas gecerse urun istemesen de senin olur ve bir yuvani yer. Ayrica
+ * her lot birine bir urun yazdigi icin oyun mutlaka biter — herkesin butcesi
+ * bittiginde ard arda yanan lotlar zinciri artik olusamaz.
+ *
+ * Devir alan takimin butcesi degismez: fiyat 0'dir, parasi bitmis takim da
+ * alabilir.
  */
 function closeLot(
   state: GameState,
@@ -147,17 +166,19 @@ function closeLot(
   const resultUntil = new Date(ctx.now.getTime() + RESULT_MS).toISOString();
 
   if (lot.currentBid === null || lot.currentBidderTeamId === null) {
-    const burned = withLot(state, {
+    const receiver = findTeam(state, lot.openerTeamId)!;
+    let s = withTeam(state, { ...receiver, itemsWon: receiver.itemsWon + 1 });
+    s = withLot(s, {
       ...lot,
-      status: 'burned',
+      status: 'granted',
       turnTeamId: null,
       turnDeadline: null,
-      winnerTeamId: null,
-      finalPrice: null,
+      winnerTeamId: receiver.id,
+      finalPrice: 0,
     });
     return {
-      state: { ...burned, resultUntil },
-      events: [{ type: 'LOT_BURNED', lotId }],
+      state: { ...s, resultUntil },
+      events: [{ type: 'LOT_GRANTED', lotId, teamId: receiver.id }],
     };
   }
 

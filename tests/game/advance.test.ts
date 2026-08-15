@@ -17,7 +17,7 @@ function run(state: GameState, ctx: Ctx, actions: Action[]): GameState {
 
 /**
  * Acik lotu, siradaki takimin pas gecmesiyle sonuna kadar tuketip kapatir.
- * Kimse teklif vermedigi icin lot yanarak kapanir.
+ * Kimse teklif vermedigi icin urun acan takima bedelsiz yazilir.
  */
 function passUntilClosed(state: GameState, ctx: Ctx): GameState {
   let s = state;
@@ -136,8 +136,7 @@ describe('oyun sonu', () => {
   });
 
   it('herkes limitini doldurdugunda urun kalsa bile biter', () => {
-    // 2 takim, limit 1, 5 urun. Pas gecmek artik limit doldurmuyor (urun
-    // yaniyor), o yuzden her lotu bir takim teklif vererek alir.
+    // 2 takim, limit 1, 5 urun. Her lotu bir takim teklif vererek alir.
     const { state, ctx } = auctionGame({ teams: 2, items: 5, itemLimit: 1 });
 
     // 1. lot: A 1 verir, B pas gecer -> A'ya satilir, A dolar.
@@ -160,5 +159,29 @@ describe('oyun sonu', () => {
     expect(r.state.status).toBe('finished');
     expect(r.state.lots).toHaveLength(2);
     expect(r.state.teams.every((t) => t.itemsWon === 1)).toBe(true);
+  });
+
+  it('kimsenin butcesi kalmasa da bedelsiz dagitim yuvalar dolunca biter', () => {
+    // 2 takim, butce 0, limit 2, 10 urun. Kimse teklif veremez; her lot
+    // acilis koltugundaki takima yazilir ve koltuk her lotta bir doner.
+    // Dort lot sonra iki takimin da yuvasi dolar: oyun urun kalsa da biter.
+    const { state, ctx } = auctionGame({ teams: 2, budget: 0, items: 10, itemLimit: 2 });
+
+    let s = state;
+    let c = ctx;
+    for (let i = 0; i < 4; i++) {
+      c = advanceCtx(c, 2001);
+      const r = applyAction(s, { type: 'ADVANCE' }, c);
+      if (!r.ok) throw new Error('hata');
+      s = r.state;
+    }
+
+    expect(s.status).toBe('finished');
+    expect(s.lots).toHaveLength(4);
+    expect(s.lots.every((l) => l.status === 'granted' && l.finalPrice === 0)).toBe(true);
+    // Urunler sirayla dagildi: her takim ikiser aldi.
+    expect(s.teams.every((t) => t.itemsWon === 2)).toBe(true);
+    // Urun listesi bitmedi, oyunu bitiren yuvalarin dolmasi oldu.
+    expect(s.nextItemIndex).toBeLessThan(s.items.length);
   });
 });

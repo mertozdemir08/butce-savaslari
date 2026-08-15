@@ -29,9 +29,9 @@ function soldLot(id: string, itemId: string, winner: string, price: number): Lot
   };
 }
 
-/** Kimse teklif vermedi: urun kimseye gitmeden elendi. */
-function burnedLot(id: string, itemId: string): Lot {
-  return { ...soldLot(id, itemId, 't-a', 0), status: 'burned', winnerTeamId: null, finalPrice: null };
+/** Kimse teklif vermedi: urun acan takima bedelsiz yazildi. */
+function grantedLot(id: string, itemId: string): Lot {
+  return { ...soldLot(id, itemId, 't-a', 0), status: 'granted', finalPrice: 0 };
 }
 
 function stateOf(teams: Team[], extra: Partial<GameState> = {}): GameState {
@@ -135,8 +135,8 @@ describe('stampText', () => {
     expect(stampText(soldLot('l', 'i', 't-b', 4), w)).toBe('SATILDI · TAKIM B · 4');
   });
 
-  it('kazanan yoksa lotun yandigini yazar', () => {
-    expect(stampText(burnedLot('l', 'i'), null)).toBe('YANDI · KİMSE ALMADI');
+  it('teklif gelmediyse bedelsiz devri yazar', () => {
+    expect(stampText(grantedLot('l', 'i'), team('t-a', 'A', 0))).toBe('BEDELSİZ · TAKIM A');
   });
 
   it('em dash kullanmaz', () => {

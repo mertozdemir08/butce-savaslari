@@ -48,8 +48,8 @@ describe('tickRooms', () => {
   it('sonuc suresi dolunca sonraki lotu istemci olmadan acar', () => {
     const { store, code, nowRef } = startedRoom();
 
-    // Iki takimin da suresi dolar: kimse teklif vermedigi icin lot yanar
-    // ve sonuc suresi baslar.
+    // Iki takimin da suresi dolar: kimse teklif vermedigi icin urun acan
+    // takima bedelsiz yazilir ve sonuc suresi baslar.
     for (let i = 0; i < 2; i++) {
       nowRef.value += TURN_SECONDS * 1000;
       tickRooms(store, nowRef.value);
@@ -57,7 +57,7 @@ describe('tickRooms', () => {
 
     const closed = store.get(code)!.state;
     expect(closed.resultUntil).not.toBeNull();
-    expect(currentLot(closed)!.status).toBe('burned');
+    expect(currentLot(closed)!.status).toBe('granted');
 
     nowRef.value += 60_000;
     expect(tickRooms(store, nowRef.value)).toEqual([code]);

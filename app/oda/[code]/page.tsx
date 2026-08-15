@@ -32,9 +32,9 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     useRoom(upper);
 
   const lot = state ? currentLot(state) : null;
-  // Yanan lot da sonuc koreografisini oynar: "kimse almadi" da bir sonuctur.
+  // Bedelsiz devralinan lot da sonuc koreografisini oynar.
   const showingResult =
-    !!state?.resultUntil && (lot?.status === 'sold' || lot?.status === 'burned');
+    !!state?.resultUntil && (lot?.status === 'sold' || lot?.status === 'granted');
   const resultPhase = useResultPhase(showingResult ? state!.resultUntil : null, clockOffsetMs);
 
   // Sonuc koreografisi bitince siradaki lotu ac. Odadaki herkes gonderir;
@@ -122,8 +122,8 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         clockOffsetMs={clockOffsetMs}
         errorMessage={error}
         result={
-          showingResult && item ? (
-            <LotResult lot={lot} item={item} winner={winner ?? null} phase={resultPhase} fill />
+          showingResult && item && winner ? (
+            <LotResult lot={lot} item={item} winner={winner} phase={resultPhase} fill />
           ) : null
         }
         onBid={onBid}

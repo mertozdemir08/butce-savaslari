@@ -11,11 +11,11 @@ import { LotTicket } from './LotTicket';
  */
 export const PHASE_AT = [0, 120, 500, 800] as const;
 
-/** Kazanan yoksa lot yanmistir: kimse teklif vermedi, urun elendi. */
-export function stampText(lot: Lot, winner: Team | null): string {
-  return winner
-    ? `SATILDI · TAKIM ${winner.name} · ${lot.finalPrice}`
-    : 'YANDI · KİMSE ALMADI';
+/** Fiyat 0 ise kimse teklif vermemis, urun acan takima bedelsiz yazilmistir. */
+export function stampText(lot: Lot, winner: Team): string {
+  return lot.finalPrice === 0
+    ? `BEDELSİZ · TAKIM ${winner.name}`
+    : `SATILDI · TAKIM ${winner.name} · ${lot.finalPrice}`;
 }
 
 /**
@@ -52,8 +52,8 @@ export function useResultPhase(resultUntil: string | null, clockOffsetMs: number
 interface Props {
   lot: Lot;
   item: Item;
-  /** Lot yandiysa null: kimse teklif vermedi. */
-  winner: Team | null;
+  /** Her kapanan lotun bir sahibi vardir: alan takim ya da bedelsiz devralan. */
+  winner: Team;
   phase: number;
   /** true ise bilet acik artirma ekranindaki boyutunu korur. */
   fill?: boolean;
@@ -83,7 +83,7 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
         <LotTicket
           lot={lot}
           item={item}
-          bidderName={winner ? `TAKIM ${winner.name}` : null}
+          bidderName={`TAKIM ${winner.name}`}
           stamp={phase >= 1 ? { text: stampText(lot, winner) } : null}
           fill={fill}
         />
@@ -95,7 +95,7 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
           role="status"
           className="mt-4 shrink-0 text-center font-display text-[28px] font-extrabold uppercase leading-none motion-safe:animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
         >
-          {winner ? `TAKIM ${winner.name} aldı` : 'Kimse almadı'}
+          {`TAKIM ${winner.name} aldı`}
         </p>
       )}
     </div>

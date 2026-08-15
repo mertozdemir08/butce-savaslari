@@ -35,16 +35,19 @@ export interface Lot {
   itemId: ItemId;
   /** 1'den baslar. */
   lotNo: number;
-  /** 'burned': kimse teklif vermedi, urun kimseye gitmeden elendi. */
-  status: 'open' | 'sold' | 'burned';
+  /** 'granted': kimse teklif vermedi, urun acan takima bedelsiz yazildi. */
+  status: 'open' | 'sold' | 'granted';
   currentBid: number | null;
   currentBidderTeamId: TeamId | null;
   turnTeamId: TeamId | null;
   /** Her sira degisiminde artar. Bayat istekleri reddetmek icin kullanilir. */
   turnSeq: number;
   turnDeadline: string | null;
-  /** Bu lotta ilk siraya giren takim. Lot acildiginda belirlenir. */
-  openerTeamId: TeamId | null;
+  /**
+   * Lotu acan takim: acilis koltugundan baslayarak yeri olan ilk takim.
+   * Hic teklif gelmezse urun bedelsiz buna yazilir.
+   */
+  openerTeamId: TeamId;
   /** Bu lotta hala yarisan takimlar. Pas gecen cikarilir. */
   activeTeamIds: TeamId[];
   log: BidRecord[];
@@ -107,9 +110,9 @@ export type GameEvent =
   | { type: 'TURN_CHANGED'; lotId: LotId; teamId: TeamId; deadline: string }
   | { type: 'BID_PLACED'; lotId: LotId; teamId: TeamId; amount: number }
   | { type: 'TEAM_PASSED'; lotId: LotId; teamId: TeamId; auto: boolean }
-  // Fiyat her zaman en az 1'dir: bedelsiz devir yerine artik yanma kurali var.
+  // Teklifle satista fiyat her zaman en az 1'dir; bedelsiz devir LOT_GRANTED ile bildirilir.
   | { type: 'LOT_SOLD'; lotId: LotId; winnerTeamId: TeamId; price: number }
-  | { type: 'LOT_BURNED'; lotId: LotId }
+  | { type: 'LOT_GRANTED'; lotId: LotId; teamId: TeamId }
   | { type: 'GAME_ENDED' }
   | { type: 'VOTING_STARTED' }
   | { type: 'VOTE_CAST'; teamId: TeamId }

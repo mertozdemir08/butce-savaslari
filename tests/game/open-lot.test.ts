@@ -112,13 +112,14 @@ describe('START_GAME', () => {
 
     const lot = r.state.lots[0];
     expect(lot.activeTeamIds).toEqual(['t-b']);
-    // Rakibi olmasa da B karar verir: 1 verip alir ya da pas gecer, urun yanar.
+    // Rakibi olmasa da B karar verir: 1 verip alir ya da pas gecer, urun
+    // bedelsiz yine ona kalir.
     expect(lot.status).toBe('open');
     expect(lot.turnTeamId).toBe('t-b');
     expect(lot.openerTeamId).toBe('t-b');
   });
 
-  it('kimsenin parasi yetmezse lot yanar, kimseye gitmez', () => {
+  it('kimsenin parasi yetmezse urun acan takima bedelsiz gider', () => {
     let s = game({ budget: 0 });
     s = {
       ...s,
@@ -134,25 +135,26 @@ describe('START_GAME', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
 
-    // Uc takim da asgari teklifi (1) veremiyor: hepsi otomatik pas gecer.
+    // Uc takim da asgari teklifi (1) veremiyor: hepsi otomatik pas gecer,
+    // urun acilis koltugundaki A'ya bedelsiz yazilir.
     expect(r.events.map((e) => e.type)).toEqual([
       'LOT_OPENED',
       'TEAM_PASSED',
       'TEAM_PASSED',
       'TEAM_PASSED',
-      'LOT_BURNED',
+      'LOT_GRANTED',
     ]);
 
     const lot = r.state.lots[0];
-    expect(lot.status).toBe('burned');
-    expect(lot.winnerTeamId).toBeNull();
-    expect(lot.finalPrice).toBeNull();
+    expect(lot.status).toBe('granted');
+    expect(lot.winnerTeamId).toBe('t-a');
+    expect(lot.finalPrice).toBe(0);
 
     expect(r.state.resultUntil).toBe(new Date(1_000_000 + RESULT_MS).toISOString());
-    expect(r.state.teams.every((t) => t.itemsWon === 0)).toBe(true);
+    expect(r.state.teams.find((t) => t.id === 't-a')!.itemsWon).toBe(1);
   });
 
-  it('limiti dolu ile parasi yetmeyen bir arada kalirsa lot yanar', () => {
+  it('limiti dolu takim devri alamaz, yeri olan siradaki takima gider', () => {
     let s = game({ itemLimit: 1 });
     s = {
       ...s,
@@ -167,15 +169,17 @@ describe('START_GAME', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
 
-    // A limiti dolu oldugu icin aktifte yok, B ise asgari teklifi veremiyor:
-    // ortada teklif verebilecek kimse kalmiyor.
+    // A limiti dolu oldugu icin aktifte yok, B ise asgari teklifi veremiyor.
+    // Acan takim yeri olan ilk takimdir: urun B'ye bedelsiz yazilir.
     const lot = r.state.lots[0];
-    expect(lot.status).toBe('burned');
-    expect(lot.winnerTeamId).toBeNull();
+    expect(lot.status).toBe('granted');
+    expect(lot.openerTeamId).toBe('t-b');
+    expect(lot.winnerTeamId).toBe('t-b');
 
     const teamA = r.state.teams.find((t) => t.id === 't-a')!;
     const teamB = r.state.teams.find((t) => t.id === 't-b')!;
     expect(teamA.itemsWon).toBe(1); // limiti doluydu, degismedi
-    expect(teamB.itemsWon).toBe(0); // parasi yetmedi, urunu almadi
+    expect(teamB.itemsWon).toBe(1); // parasi yetmese de devri aldi
+    expect(teamB.budgetLeft).toBe(0);
   });
 });

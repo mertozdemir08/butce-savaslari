@@ -42,8 +42,8 @@ describe('teklifle satis', () => {
   });
 });
 
-describe('teklif gelmezse urun yanar', () => {
-  it('herkes pas gecince lot kimseye gitmez', () => {
+describe('teklif gelmezse bedelsiz devir', () => {
+  it('herkes pas gecince urun acan takima bedelsiz yazilir', () => {
     const { state, ctx } = auctionGame({ teams: 3, budget: 10 });
     const s = run(state, ctx, [
       { type: 'PASS', teamId: 't-a', turnSeq: 1 },
@@ -52,34 +52,37 @@ describe('teklif gelmezse urun yanar', () => {
     ]);
 
     const lot = s.lots[0];
-    expect(lot.status).toBe('burned');
-    expect(lot.winnerTeamId).toBeNull();
-    expect(lot.finalPrice).toBeNull();
+    expect(lot.status).toBe('granted');
+    expect(lot.winnerTeamId).toBe('t-a');
+    expect(lot.finalPrice).toBe(0);
     expect(lot.turnTeamId).toBeNull();
     expect(lot.turnDeadline).toBeNull();
 
-    // Hicbir takimin butcesi ya da urun sayisi degismedi.
+    // Hicbir takimin butcesi degismedi; yalnizca acan takimin urunu arttti.
     for (const t of s.teams) {
       expect(t.budgetLeft, t.name).toBe(10);
-      expect(t.itemsWon, t.name).toBe(0);
+      expect(t.itemsWon, t.name).toBe(t.id === 't-a' ? 1 : 0);
     }
 
-    // Sonuc koreografisi yanan lot icin de oynar.
+    // Sonuc koreografisi devir icin de oynar.
     expect(s.resultUntil).toBe(new Date(ctx.now.getTime() + 2000).toISOString());
   });
 
-  it('yanmayi LOT_BURNED olayiyla bildirir', () => {
+  it('deviri LOT_GRANTED olayiyla bildirir', () => {
     const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
     const first = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
     if (!first.ok) throw new Error('hata');
     const r = applyAction(first.state, { type: 'PASS', teamId: 't-b', turnSeq: 2 }, ctx);
     if (!r.ok) throw new Error('hata');
 
-    expect(r.events.map((e) => e.type)).toEqual(['TEAM_PASSED', 'LOT_BURNED']);
-    expect(r.events.find((e) => e.type === 'LOT_BURNED')).toMatchObject({ lotId: r.state.lots[0].id });
+    expect(r.events.map((e) => e.type)).toEqual(['TEAM_PASSED', 'LOT_GRANTED']);
+    expect(r.events.find((e) => e.type === 'LOT_GRANTED')).toMatchObject({
+      lotId: r.state.lots[0].id,
+      teamId: 't-a',
+    });
   });
 
-  it('butcesi yetmeyen takimlar otomatik pas gecince de yanar', () => {
+  it('butcesi bitmis acan takim da deviri alir', () => {
     const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
     const broke = { ...state, teams: state.teams.map((t) => ({ ...t, budgetLeft: 0 })) };
 
@@ -89,9 +92,11 @@ describe('teklif gelmezse urun yanar', () => {
     if (!r.ok) throw new Error(`hata: ${r.error.code}`);
 
     const lot = r.state.lots[0];
-    expect(lot.status).toBe('burned');
-    expect(lot.winnerTeamId).toBeNull();
-    expect(r.state.teams.every((t) => t.itemsWon === 0)).toBe(true);
+    expect(lot.status).toBe('granted');
+    expect(lot.winnerTeamId).toBe('t-a');
+    // Fiyat 0 oldugu icin butce yetmemesi devri engellemez.
+    expect(r.state.teams.find((t) => t.id === 't-a')!.budgetLeft).toBe(0);
+    expect(r.state.teams.find((t) => t.id === 't-a')!.itemsWon).toBe(1);
   });
 });
 
@@ -118,14 +123,15 @@ describe('teklif yokken tek aday', () => {
     expect(r.state.teams.find((t) => t.id === 't-b')!.budgetLeft).toBe(9);
   });
 
-  it('son takim pas gecerse urun yanar, ona zorla verilmez', () => {
+  it('son takim da pas gecerse urun acana doner, son pas gecene degil', () => {
     const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
     const s = run(state, ctx, [
       { type: 'PASS', teamId: 't-a', turnSeq: 1 },
       { type: 'PASS', teamId: 't-b', turnSeq: 2 },
     ]);
 
-    expect(s.lots[0].status).toBe('burned');
+    expect(s.lots[0].status).toBe('granted');
+    expect(s.teams.find((t) => t.id === 't-a')!.itemsWon).toBe(1);
     expect(s.teams.find((t) => t.id === 't-b')!.itemsWon).toBe(0);
   });
 
