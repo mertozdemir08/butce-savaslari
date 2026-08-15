@@ -78,7 +78,7 @@ export function BidBar({ minBid, maxBid, disabled, onBid, onPass }: Props) {
 
       <p
         data-testid="bid-hint"
-        className="mt-3 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]"
+        className="mt-3 font-mono text-[10px] tracking-widest text-mute"
       >
         {canBid ? `EN AZ ${minBid} · BÜTÇEN ${maxBid}` : `BÜTÇEN YETMİYOR · EN AZ ${minBid} GEREKLİ`}
         <span className="hidden md:inline"> · KLAVYE: ↑↓ AYARLA, ENTER TEKLİF, P PAS</span>

@@ -29,6 +29,11 @@ function soldLot(id: string, itemId: string, winner: string, price: number): Lot
   };
 }
 
+/** Kimse teklif vermedi: urun kimseye gitmeden elendi. */
+function burnedLot(id: string, itemId: string): Lot {
+  return { ...soldLot(id, itemId, 't-a', 0), status: 'burned', winnerTeamId: null, finalPrice: null };
+}
+
 function stateOf(teams: Team[], extra: Partial<GameState> = {}): GameState {
   return {
     roomId: 'AB23', code: 'AB23', status: 'finished', budget: 10, itemLimit: 5,
@@ -37,7 +42,7 @@ function stateOf(teams: Team[], extra: Partial<GameState> = {}): GameState {
       { id: 'i-1', name: 'Ev', imageUrl: null },
       { id: 'i-2', name: 'Araba', imageUrl: null },
     ],
-    lots: [soldLot('l-1', 'i-1', 't-a', 4), soldLot('l-2', 'i-2', 't-b', 0)],
+    lots: [soldLot('l-1', 'i-1', 't-a', 4), soldLot('l-2', 'i-2', 't-b', 2)],
     currentLotId: null, nextItemIndex: 2, openerSeat: 0, resultUntil: null,
     votes: [], ...extra,
   };
@@ -120,7 +125,7 @@ describe('wonItems', () => {
   it('takimin kazandigi lotlari fiyatlariyla doner', () => {
     const s = stateOf([team('t-a', 'A', 0), team('t-b', 'B', 1)]);
     expect(wonItems(s, 't-a')).toEqual([{ name: 'Ev', price: 4 }]);
-    expect(wonItems(s, 't-b')).toEqual([{ name: 'Araba', price: 0 }]);
+    expect(wonItems(s, 't-b')).toEqual([{ name: 'Araba', price: 2 }]);
   });
 });
 
@@ -130,9 +135,8 @@ describe('stampText', () => {
     expect(stampText(soldLot('l', 'i', 't-b', 4), w)).toBe('SATILDI · TAKIM B · 4');
   });
 
-  it('bedelsiz devirde BEDELSIZ yazar', () => {
-    const w = team('t-b', 'B', 1);
-    expect(stampText(soldLot('l', 'i', 't-b', 0), w)).toBe('BEDELSİZ · TAKIM B');
+  it('kazanan yoksa lotun yandigini yazar', () => {
+    expect(stampText(burnedLot('l', 'i'), null)).toBe('YANDI · KİMSE ALMADI');
   });
 
   it('em dash kullanmaz', () => {
@@ -278,12 +282,13 @@ describe('ResultScreen', () => {
     expect(screen.getAllByTestId('standing-row')).toHaveLength(3);
   });
 
-  it('kazanilan urunleri ve bedelsiz devri isaretler', () => {
+  it('kazanilan urunleri odenen fiyatlariyla listeler', () => {
     const teams = [team('t-a', 'A', 0), team('t-b', 'B', 1)];
     render(<ResultScreen state={stateOf(teams)} me={teams[0]} />);
     expect(screen.getByText('Ev')).toBeTruthy();
     expect(screen.getByText('Araba')).toBeTruthy();
-    expect(screen.getByText('BEDELSİZ')).toBeTruthy();
+    expect(screen.getByText('4')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
   });
 
   it('2 takimda kazanan ilan etmez, vitrin notu gosterir', () => {

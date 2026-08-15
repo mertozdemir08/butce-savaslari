@@ -19,7 +19,7 @@ interface Props {
 function TicketStrip({ names }: { names: string[] }) {
   if (names.length === 0) {
     return (
-      <span className="mt-1.5 block font-[family-name:var(--font-mono)] text-[8.5px] tracking-[0.1em] text-[var(--color-mute)]">
+      <span className="mt-1.5 block font-mono text-[8.5px] tracking-widest text-mute">
         ÜRÜN YOK
       </span>
     );
@@ -30,7 +30,7 @@ function TicketStrip({ names }: { names: string[] }) {
       {names.map((name, i) => (
         <span
           key={`${name}-${i}`}
-          className="rounded-[2px] bg-[var(--color-text)] px-1.5 py-[2px] font-[family-name:var(--font-mono)] text-[8.5px] uppercase tracking-[0.04em] text-[var(--color-bg)]"
+          className="rounded-[2px] bg-text px-1.5 py-[2px] font-mono text-[8.5px] uppercase tracking-[0.04em] text-bg"
         >
           {name}
         </span>
@@ -54,15 +54,15 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
   const points = order.length;
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] max-w-2xl flex-col gap-7 px-5 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-7 px-5 py-10">
       <header>
-        <p className="font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.2em] text-[var(--color-mute)]">
+        <p className="font-mono text-[9.5px] tracking-[0.2em] text-mute">
           SON AŞAMA
         </p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-[38px] font-extrabold uppercase leading-none">
+        <h1 className="mt-1 font-display text-[38px] font-extrabold uppercase leading-none">
           Sıralama oylaması
         </h1>
-        <p className="mt-2 text-sm text-[var(--color-dim)]">
+        <p className="mt-2 text-sm text-dim">
           Diğer takımları en iyiden en kötüye sırala. Kendine oy veremezsin.
         </p>
       </header>
@@ -76,9 +76,9 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
             <li
               key={teamId}
               data-testid="vote-row"
-              className="flex items-center gap-3 rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5"
+              className="flex items-center gap-3 rounded-card border border-line bg-surface px-3 py-2.5"
             >
-              <span className="w-5 font-[family-name:var(--font-display)] text-[20px] font-extrabold text-[var(--color-accent)]">
+              <span className="w-5 font-display text-[20px] font-extrabold text-accent">
                 {index + 1}
               </span>
 
@@ -89,7 +89,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
                 <TicketStrip names={wonItems(state, team.id).map((w) => w.name)} />
               </div>
 
-              <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--color-mute)]">
+              <span className="font-mono text-[10px] text-mute">
                 {`${points - index} PUAN`}
               </span>
 
@@ -100,7 +100,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
                     aria-label={`TAKIM ${team.name} yukarı taşı`}
                     disabled={index === 0}
                     onClick={() => setOrder((o) => moveItem(o, index, index - 1))}
-                    className="h-6 w-8 cursor-pointer rounded-[2px] border border-[var(--color-line)] text-[11px] text-[var(--color-dim)] disabled:pointer-events-none disabled:opacity-25"
+                    className="h-6 w-8 cursor-pointer rounded-[2px] border border-line text-[11px] text-dim disabled:pointer-events-none disabled:opacity-25"
                   >
                     &#9650;
                   </button>
@@ -109,7 +109,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
                     aria-label={`TAKIM ${team.name} aşağı taşı`}
                     disabled={index === order.length - 1}
                     onClick={() => setOrder((o) => moveItem(o, index, index + 1))}
-                    className="h-6 w-8 cursor-pointer rounded-[2px] border border-[var(--color-line)] text-[11px] text-[var(--color-dim)] disabled:pointer-events-none disabled:opacity-25"
+                    className="h-6 w-8 cursor-pointer rounded-[2px] border border-line text-[11px] text-dim disabled:pointer-events-none disabled:opacity-25"
                   >
                     &#9660;
                   </button>
@@ -122,9 +122,9 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
         {me && (
           <li
             data-testid="self-row"
-            className="flex items-center gap-3 rounded-[4px] border border-dashed border-[var(--color-line)] px-3 py-2.5 opacity-40"
+            className="flex items-center gap-3 rounded-card border border-dashed border-line px-3 py-2.5 opacity-40"
           >
-            <span className="w-5 font-[family-name:var(--font-display)] text-[20px] font-extrabold text-[var(--color-mute)]">
+            <span className="w-5 font-display text-[20px] font-extrabold text-mute">
               &ndash;
             </span>
             <div className="min-w-0 flex-1">
@@ -133,7 +133,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
               </span>
               <TicketStrip names={wonItems(state, me.id).map((w) => w.name)} />
             </div>
-            <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--color-mute)]">
+            <span className="font-mono text-[10px] text-mute">
               OY VEREMEZ
             </span>
           </li>
@@ -143,7 +143,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
       <p
         data-testid="vote-progress"
         aria-live="polite"
-        className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.12em] text-[var(--color-mute)]"
+        className="font-mono text-[10px] tracking-[0.12em] text-mute"
       >
         {`${state.teams.length} TAKIMDAN ${state.votes.length}'İ OYUNU TAMAMLADI`}
       </p>
@@ -151,7 +151,7 @@ export function VoteScreen({ state, me, error, onVote }: Props) {
       {error && (
         <p
           role="alert"
-          className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-accent)]"
+          className="font-mono text-[11px] text-accent"
         >
           {error}
         </p>

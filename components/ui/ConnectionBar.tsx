@@ -15,7 +15,7 @@ export function ConnectionBar({ connection }: { connection: Connection }) {
     <div
       role="status"
       data-testid="connection-bar"
-      className="border-b border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-1.5 text-center font-[family-name:var(--font-mono)] text-[10px] tracking-[0.14em] text-[var(--color-dim)]"
+      className="border-b border-line bg-surface px-4 py-1.5 text-center font-mono text-[10px] tracking-[0.14em] text-dim"
     >
       {LABELS[connection]}
     </div>

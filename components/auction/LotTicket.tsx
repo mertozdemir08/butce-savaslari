@@ -26,7 +26,7 @@ function Notch({ side }: { side: 'left' | 'right' }) {
     <span
       aria-hidden
       className={[
-        'absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[var(--color-bg)]',
+        'absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-bg',
         side === 'left' ? '-left-2' : '-right-2',
       ].join(' ')}
     />
@@ -45,14 +45,14 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
   return (
     <div
       className={[
-        'relative flex flex-col rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 md:p-[18px]',
+        'relative flex flex-col rounded-card border border-line bg-surface p-4 md:p-[18px]',
         fill ? 'md:h-full md:min-h-0' : '',
       ].join(' ')}
     >
       <Notch side="left" />
       <Notch side="right" />
 
-      <span className="shrink-0 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.2em] text-[var(--color-mute)]">
+      <span className="shrink-0 font-mono text-[10px] tracking-[0.2em] text-mute">
         {`ÜRÜN ${lotNo}`}
       </span>
 
@@ -90,7 +90,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
             aria-hidden
             className={[
               'absolute inset-0 flex items-center justify-center',
-              'font-[family-name:var(--font-display)] font-extrabold text-[var(--color-line)]',
+              'font-display font-extrabold text-line',
               fill ? 'text-[16vh] md:text-[26vh]' : 'text-[54px]',
             ].join(' ')}
           >
@@ -102,7 +102,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
       {/* 2. bant: urun adi */}
       <h2
         className={[
-          'mt-3 shrink-0 break-words text-center font-[family-name:var(--font-display)] font-extrabold uppercase leading-[0.9]',
+          'mt-3 shrink-0 wrap-break-word text-center font-display font-extrabold uppercase leading-[0.9]',
           fill ? 'text-[40px] md:text-[clamp(2.5rem,6.5vh,5.5rem)]' : 'text-[42px] md:text-[52px]',
         ].join(' ')}
       >
@@ -111,26 +111,26 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
 
       <div
         aria-hidden
-        className="my-3 shrink-0 border-t-[1.5px] border-dashed border-[var(--color-line)]"
+        className="my-3 shrink-0 border-t-[1.5px] border-dashed border-line"
       />
 
       {/* 3. bant: mevcut teklif ve sahibi. Dikey yigin, hepsi ortada:
           yan yana dizilince teklif sahibinin genisligi rakami yana kaydiriyordu. */}
       <div className="flex shrink-0 flex-col items-center text-center">
-        <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.15em] text-[var(--color-mute)]">
+        <span className="font-mono text-[9px] tracking-[0.15em] text-mute">
           MEVCUT TEKLİF
         </span>
         <span
           data-testid="current-bid"
           className={[
-            'tnum mt-0.5 block font-[family-name:var(--font-display)] font-extrabold leading-none text-[var(--color-accent)]',
+            'tnum mt-0.5 block font-display font-extrabold leading-none text-accent',
             fill ? 'text-[44px] md:text-[clamp(2.5rem,5vh,4rem)]' : 'text-[42px]',
           ].join(' ')}
         >
           {lot.currentBid ?? '-'}
         </span>
         {bidderName && (
-          <span className="mt-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-mute)]">
+          <span className="mt-1 font-mono text-[11px] text-mute">
             {bidderName}
           </span>
         )}
@@ -142,7 +142,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
           role="status"
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <span className="-rotate-[4deg] border-[3px] border-[var(--color-accent)] bg-[var(--color-bg)]/85 px-5 py-2 font-[family-name:var(--font-display)] text-[26px] font-extrabold uppercase tracking-[0.06em] text-[var(--color-accent)] md:text-[34px]">
+          <span className="rotate-[-4deg] border-[3px] border-accent bg-bg/85 px-5 py-2 font-display text-[26px] font-extrabold uppercase tracking-[0.06em] text-accent md:text-[34px]">
             {stamp.text}
           </span>
         </div>

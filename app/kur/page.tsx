@@ -25,7 +25,7 @@ export default function SetupPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-5 py-12">
-      <h1 className="mb-8 font-[family-name:var(--font-display)] text-[40px] font-extrabold uppercase leading-none">
+      <h1 className="mb-8 font-display text-[40px] font-extrabold uppercase leading-none">
         Oda kur
       </h1>
       <SetupForm onSubmit={create} busy={busy} error={error} />

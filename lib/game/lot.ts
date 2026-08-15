@@ -79,14 +79,6 @@ export function resolveTurn(
   for (let guard = 0; guard <= n; guard++) {
     const lot = s.lots.find((l) => l.id === lotId)!;
 
-    // Teklif yokken tek aday kaldiysa lot zaten ona kalacak: teklif verse de
-    // pas gecse de urun onun, tek fark bosa harcanan para. Tur acmak yerine
-    // lotu burada kapatip bedelsiz devrediyoruz.
-    if (lot.currentBid === null && lot.activeTeamIds.length === 1) {
-      const closed = closeLot(s, lotId, ctx);
-      return { state: closed.state, events: [...events, ...closed.events] };
-    }
-
     let candidate = null as null | { id: string; seat: number };
     for (let offset = 0; offset < n; offset++) {
       const seat = (cursor + offset) % n;
@@ -137,8 +129,14 @@ export function resolveTurn(
 }
 
 /**
- * Lotu kapatir. Teklif varsa teklif sahibine satar,
- * yoksa en son pas gecen takima bedelsiz devreder.
+ * Lotu kapatir. Teklif varsa teklif sahibine satar; hic teklif gelmediyse
+ * urun yanar ve kimseye gitmez.
+ *
+ * Yanma kurali, "en son pas gecen bedelsiz alir" kuralinin yerini aldi.
+ * Eskisi 3+ takimda calisiyordu ama 2 takimda bozuluyordu: acan takim pas
+ * gecince urun otomatik digerine kaliyor, ikinci takim hic karar vermiyordu.
+ * Simdi pas gecmek gercek bir secim — isteyen en az 1 verip alir, kimse
+ * vermezse urun elenir.
  */
 function closeLot(
   state: GameState,
@@ -146,44 +144,26 @@ function closeLot(
   ctx: Ctx,
 ): { state: GameState; events: GameEvent[] } {
   const lot = state.lots.find((l) => l.id === lotId)!;
+  const resultUntil = new Date(ctx.now.getTime() + RESULT_MS).toISOString();
 
-  let winnerId: string;
-  let price: number;
-  let free: boolean;
-
-  if (lot.currentBid !== null && lot.currentBidderTeamId !== null) {
-    winnerId = lot.currentBidderTeamId;
-    price = lot.currentBid;
-    free = false;
-  } else {
-    // Teklif yok. Hala aktif takim varsa lot erken kapanmistir (tek aday
-    // kalmisti): urun onundur. Herkes pas gectiyse en son pas gecen devralir.
-    const stillActive = lot.activeTeamIds
-      .map((id) => findTeam(state, id)!)
-      .sort((a, b) => a.seat - b.seat)[0];
-
-    if (stillActive) {
-      winnerId = stillActive.id;
-    } else {
-      const lastPass = [...lot.log].reverse().find((r) => r.kind !== 'bid');
-      const startSeat = lastPass ? findTeam(state, lastPass.teamId)!.seat : state.openerSeat;
-      const n = state.teams.length;
-      let recipient = null as null | string;
-      for (let i = 0; i < n; i++) {
-        const t = teamAtSeat(state, (startSeat + i) % n)!;
-        if (hasRoom(t, state)) {
-          recipient = t.id;
-          break;
-        }
-      }
-      // openNextLot en az bir takimin yeri oldugunu garanti eder.
-      winnerId = recipient!;
-    }
-    price = 0;
-    free = true;
+  if (lot.currentBid === null || lot.currentBidderTeamId === null) {
+    const burned = withLot(state, {
+      ...lot,
+      status: 'burned',
+      turnTeamId: null,
+      turnDeadline: null,
+      winnerTeamId: null,
+      finalPrice: null,
+    });
+    return {
+      state: { ...burned, resultUntil },
+      events: [{ type: 'LOT_BURNED', lotId }],
+    };
   }
 
-  const winner = findTeam(state, winnerId)!;
+  const winner = findTeam(state, lot.currentBidderTeamId)!;
+  const price = lot.currentBid;
+
   let s = withTeam(state, {
     ...winner,
     itemsWon: winner.itemsWon + 1,
@@ -195,15 +175,13 @@ function closeLot(
     status: 'sold',
     turnTeamId: null,
     turnDeadline: null,
-    winnerTeamId: winnerId,
+    winnerTeamId: winner.id,
     finalPrice: price,
   });
 
-  s = { ...s, resultUntil: new Date(ctx.now.getTime() + RESULT_MS).toISOString() };
-
   return {
-    state: s,
-    events: [{ type: 'LOT_SOLD', lotId, winnerTeamId: winnerId, price, free }],
+    state: { ...s, resultUntil },
+    events: [{ type: 'LOT_SOLD', lotId, winnerTeamId: winner.id, price }],
   };
 }
 

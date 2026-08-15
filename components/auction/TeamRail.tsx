@@ -27,7 +27,7 @@ export function TeamRail({ state, lot, meId, withLog = true, fill = false }: Pro
 
   return (
     <div className={['flex flex-col', fill ? 'h-full min-h-0' : ''].join(' ')}>
-      <div className="shrink-0 border-b border-[var(--color-line)] px-4 py-2.5 font-[family-name:var(--font-mono)] text-[9px] tracking-[0.2em] text-[var(--color-mute)]">
+      <div className="shrink-0 border-b border-line px-4 py-2.5 font-mono text-[9px] tracking-[0.2em] text-mute">
         TAKIMLAR
       </div>
 

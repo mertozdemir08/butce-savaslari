@@ -26,15 +26,15 @@ export interface SetupValues {
 }
 
 const field =
-  'min-h-[44px] w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] ' +
-  'px-3 py-2.5 text-[15px] text-[var(--color-text)]';
+  'min-h-[44px] w-full rounded-card border border-line bg-surface ' +
+  'px-3 py-2.5 text-[15px] text-text';
 const label =
-  'mb-1.5 block font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.18em] text-[var(--color-mute)]';
+  'mb-1.5 block font-mono text-[9.5px] tracking-[0.18em] text-mute';
 const chip =
-  'cursor-pointer rounded-[4px] border bg-[var(--color-surface)] px-3 py-2 text-left ' +
-  'transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]';
-const chipOn = 'border-[var(--color-accent)]';
-const chipOff = 'border-[var(--color-line)]';
+  'cursor-pointer rounded-card border bg-surface px-3 py-2 text-left ' +
+  'transition-transform duration-200 ease-out-soft active:scale-[0.98]';
+const chipOn = 'border-accent';
+const chipOff = 'border-line';
 
 export function SetupForm({
   onSubmit,
@@ -139,7 +139,7 @@ export function SetupForm({
               className={`${chip} ${packId === p.id ? chipOn : chipOff}`}
             >
               <span className="block text-[13px] font-semibold">{p.name}</span>
-              <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.12em] text-[var(--color-mute)]">
+              <span className="font-mono text-[9px] tracking-[0.12em] text-mute">
                 {`${p.items.length} ÜRÜN`}
               </span>
             </button>
@@ -151,7 +151,7 @@ export function SetupForm({
             className={`${chip} ${packId === null ? chipOn : chipOff}`}
           >
             <span className="block text-[13px] font-semibold">Kendi kategorin</span>
-            <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.12em] text-[var(--color-mute)]">
+            <span className="font-mono text-[9px] tracking-[0.12em] text-mute">
               KENDİN YAZ
             </span>
           </button>
@@ -165,19 +165,19 @@ export function SetupForm({
               tasiyordu: liste kendi icinde kayar, yukseklik sabit kalir. */}
           <ul
             data-testid="pack-item-list"
-            className="max-h-[228px] overflow-y-auto border-y border-[var(--color-line)]"
+            className="max-h-[228px] overflow-y-auto border-y border-line"
           >
             {pack.items.map((item) => (
               <li
                 key={item.name}
                 data-testid="pack-item"
-                className="border-b border-[var(--color-line-soft)] px-1 py-2 text-[14px] last:border-b-0"
+                className="border-b border-line-soft px-1 py-2 text-[14px] last:border-b-0"
               >
                 {item.name}
               </li>
             ))}
           </ul>
-          <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
+          <p className="mt-1.5 font-mono text-[10px] tracking-widest text-mute">
             {`HAZIR KATEGORİ · ${pack.items.length} ÜRÜN`}
           </p>
         </div>
@@ -189,12 +189,12 @@ export function SetupForm({
           <textarea
             id="items"
             rows={8}
-            className={`${field} font-[family-name:var(--font-mono)] text-[13px]`}
+            className={`${field} font-mono text-[13px]`}
             placeholder={'Ev\nAraba\nŞöhret'}
             value={itemText}
             onChange={(e) => setItemText(e.target.value)}
           />
-          <p className="mt-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
+          <p className="mt-1.5 font-mono text-[10px] tracking-widest text-mute">
             {`HER SATIR BİR ÜRÜN · ${items.length} ÜRÜN`}
             {!enoughItems && ` · EN AZ ${MIN_ITEMS} GEREKLİ`}
           </p>
@@ -204,7 +204,7 @@ export function SetupForm({
       {error && (
         <p
           role="alert"
-          className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-accent)]"
+          className="font-mono text-[11px] text-accent"
         >
           {error}
         </p>

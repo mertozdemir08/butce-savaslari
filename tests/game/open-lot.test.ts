@@ -95,7 +95,7 @@ describe('START_GAME', () => {
     expect(r.events.map((e) => e.type)).toEqual(['LOT_OPENED', 'TURN_CHANGED']);
   });
 
-  it('limiti dolu takimi lot acilisinda eler; tek aday kalirsa urunu bedelsiz alir', () => {
+  it('limiti dolu takimi lot acilisinda eler, siraya sokmaz', () => {
     let s = game({ itemLimit: 1 });
     s = {
       ...s,
@@ -112,15 +112,13 @@ describe('START_GAME', () => {
 
     const lot = r.state.lots[0];
     expect(lot.activeTeamIds).toEqual(['t-b']);
-    // Rakip yok: B'ye sira acilmaz, urun bedelsiz onun olur.
-    expect(lot.status).toBe('sold');
-    expect(lot.winnerTeamId).toBe('t-b');
-    expect(lot.finalPrice).toBe(0);
-    expect(lot.turnTeamId).toBeNull();
-    expect(r.state.teams.find((t) => t.id === 't-b')!.budgetLeft).toBe(10);
+    // Rakibi olmasa da B karar verir: 1 verip alir ya da pas gecer, urun yanar.
+    expect(lot.status).toBe('open');
+    expect(lot.turnTeamId).toBe('t-b');
+    expect(lot.openerTeamId).toBe('t-b');
   });
 
-  it('teklif gelmezse lot en son pas gecen takima bedelsiz gider', () => {
+  it('kimsenin parasi yetmezse lot yanar, kimseye gitmez', () => {
     let s = game({ budget: 0 });
     s = {
       ...s,
@@ -136,31 +134,25 @@ describe('START_GAME', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
 
-    // A ve B parasi yetmedigi icin otomatik pas gecti; geriye tek aday olarak
-    // C kaldi ve lot ona sira acilmadan kapandi.
+    // Uc takim da asgari teklifi (1) veremiyor: hepsi otomatik pas gecer.
     expect(r.events.map((e) => e.type)).toEqual([
       'LOT_OPENED',
       'TEAM_PASSED',
       'TEAM_PASSED',
-      'LOT_SOLD',
+      'TEAM_PASSED',
+      'LOT_BURNED',
     ]);
 
     const lot = r.state.lots[0];
-    expect(lot.status).toBe('sold');
-    expect(lot.finalPrice).toBe(0);
-    expect(lot.winnerTeamId).toBe('t-c');
-
-    const soldEvent = r.events.find((e) => e.type === 'LOT_SOLD');
-    expect(soldEvent).toMatchObject({ winnerTeamId: 't-c', price: 0, free: true });
+    expect(lot.status).toBe('burned');
+    expect(lot.winnerTeamId).toBeNull();
+    expect(lot.finalPrice).toBeNull();
 
     expect(r.state.resultUntil).toBe(new Date(1_000_000 + RESULT_MS).toISOString());
-
-    const winner = r.state.teams.find((t) => t.id === 't-c')!;
-    expect(winner.itemsWon).toBe(1);
-    expect(winner.budgetLeft).toBe(0);
+    expect(r.state.teams.every((t) => t.itemsWon === 0)).toBe(true);
   });
 
-  it('limiti dolu takim devralamaz, butcesi yetmeyen otomatik pas gecen devralir', () => {
+  it('limiti dolu ile parasi yetmeyen bir arada kalirsa lot yanar', () => {
     let s = game({ itemLimit: 1 });
     s = {
       ...s,
@@ -175,12 +167,15 @@ describe('START_GAME', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
 
+    // A limiti dolu oldugu icin aktifte yok, B ise asgari teklifi veremiyor:
+    // ortada teklif verebilecek kimse kalmiyor.
     const lot = r.state.lots[0];
-    expect(lot.winnerTeamId).toBe('t-b');
+    expect(lot.status).toBe('burned');
+    expect(lot.winnerTeamId).toBeNull();
 
     const teamA = r.state.teams.find((t) => t.id === 't-a')!;
     const teamB = r.state.teams.find((t) => t.id === 't-b')!;
-    expect(teamA.itemsWon).toBe(1); // limiti doluydu, devralamadi
-    expect(teamB.itemsWon).toBe(1); // butcesi yetmeyen otomatik pas gecen devraldi
+    expect(teamA.itemsWon).toBe(1); // limiti doluydu, degismedi
+    expect(teamB.itemsWon).toBe(0); // parasi yetmedi, urunu almadi
   });
 });

@@ -12,12 +12,12 @@ import { currentLot } from '@/lib/game';
 
 function Notice({ title, body }: { title: string; body: string }) {
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center px-6 text-center">
+    <main className="flex min-h-dvh items-center justify-center px-6 text-center">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold uppercase">
+        <h1 className="font-display text-3xl font-extrabold uppercase">
           {title}
         </h1>
-        <p className="mt-2 text-sm text-[var(--color-dim)]">{body}</p>
+        <p className="mt-2 text-sm text-dim">{body}</p>
       </div>
     </main>
   );
@@ -32,7 +32,9 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     useRoom(upper);
 
   const lot = state ? currentLot(state) : null;
-  const showingResult = !!state?.resultUntil && lot?.status === 'sold';
+  // Yanan lot da sonuc koreografisini oynar: "kimse almadi" da bir sonuctur.
+  const showingResult =
+    !!state?.resultUntil && (lot?.status === 'sold' || lot?.status === 'burned');
   const resultPhase = useResultPhase(showingResult ? state!.resultUntil : null, clockOffsetMs);
 
   // Sonuc koreografisi bitince siradaki lotu ac. Odadaki herkes gonderir;
@@ -61,18 +63,18 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   if (!hasSession) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center px-6 text-center">
+      <main className="flex min-h-dvh items-center justify-center px-6 text-center">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold uppercase">
+          <h1 className="font-display text-3xl font-extrabold uppercase">
             Bu odaya katılmadın
           </h1>
-          <p className="mt-2 text-sm text-[var(--color-dim)]">
+          <p className="mt-2 text-sm text-dim">
             Ana sayfadan oda kodunu girerek katılabilirsin.
           </p>
           <button
             type="button"
             onClick={() => router.push('/')}
-            className="mt-5 cursor-pointer font-[family-name:var(--font-mono)] text-[11px] tracking-[0.14em] underline"
+            className="mt-5 cursor-pointer font-mono text-[11px] tracking-[0.14em] underline"
           >
             ANA SAYFA
           </button>
@@ -87,8 +89,8 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   if (!state) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center px-6">
-        <p className="font-[family-name:var(--font-mono)] text-[11px] tracking-[0.2em] text-[var(--color-mute)]">
+      <main className="flex min-h-dvh items-center justify-center px-6">
+        <p className="font-mono text-[11px] tracking-[0.2em] text-mute">
           YÜKLENİYOR
         </p>
       </main>
@@ -120,8 +122,8 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         clockOffsetMs={clockOffsetMs}
         errorMessage={error}
         result={
-          showingResult && item && winner ? (
-            <LotResult lot={lot} item={item} winner={winner} phase={resultPhase} fill />
+          showingResult && item ? (
+            <LotResult lot={lot} item={item} winner={winner ?? null} phase={resultPhase} fill />
           ) : null
         }
         onBid={onBid}

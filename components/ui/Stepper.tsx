@@ -9,9 +9,9 @@ interface Props {
 }
 
 const arrow =
-  'flex min-h-[44px] w-[52px] cursor-pointer items-center justify-center bg-[var(--color-surface)] ' +
-  'font-[family-name:var(--font-display)] text-2xl font-extrabold text-[var(--color-dim)] ' +
-  'transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.96] ' +
+  'flex min-h-[44px] w-[52px] cursor-pointer items-center justify-center bg-surface ' +
+  'font-display text-2xl font-extrabold text-dim ' +
+  'transition-transform duration-200 ease-out-soft active:scale-[0.96] ' +
   'disabled:pointer-events-none disabled:opacity-30';
 
 /**
@@ -23,7 +23,7 @@ export function Stepper({ value, min, max, onChange, disabled = false }: Props) 
 
   return (
     <div className="flex items-stretch gap-2">
-      <div className="flex items-stretch overflow-hidden rounded-[4px] border border-[var(--color-line)]">
+      <div className="flex items-stretch overflow-hidden rounded-card border border-line">
         <button
           type="button"
           aria-label="Bir azalt"
@@ -37,7 +37,7 @@ export function Stepper({ value, min, max, onChange, disabled = false }: Props) 
         <div
           data-testid="stepper-value"
           aria-live="polite"
-          className="tnum flex w-24 items-center justify-center border-x border-[var(--color-line)] font-[family-name:var(--font-display)] text-[40px] font-extrabold leading-none"
+          className="tnum flex w-24 items-center justify-center border-x border-line font-display text-[40px] font-extrabold leading-none"
         >
           {value}
         </div>
@@ -58,7 +58,7 @@ export function Stepper({ value, min, max, onChange, disabled = false }: Props) 
         aria-label={`En yüksek teklif: ${max}`}
         disabled={disabled || value >= max}
         onClick={() => onChange(max)}
-        className="flex min-h-[44px] cursor-pointer items-center rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] px-4 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.14em] text-[var(--color-dim)] disabled:pointer-events-none disabled:opacity-30"
+        className="flex min-h-[44px] cursor-pointer items-center rounded-card border border-line bg-surface px-4 font-mono text-[10px] tracking-[0.14em] text-dim disabled:pointer-events-none disabled:opacity-30"
       >
         MAKS {max}
       </button>

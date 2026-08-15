@@ -42,89 +42,110 @@ describe('teklifle satis', () => {
   });
 });
 
-describe('bedelsiz devir', () => {
-  it('teklif yokken son takim kalinca lot ona bedelsiz kalir', () => {
+describe('teklif gelmezse urun yanar', () => {
+  it('herkes pas gecince lot kimseye gitmez', () => {
     const { state, ctx } = auctionGame({ teams: 3, budget: 10 });
-    // A pas -> B pas -> aktifte yalnizca C kalir, teklif yok: lot C'ye kapanir.
+    const s = run(state, ctx, [
+      { type: 'PASS', teamId: 't-a', turnSeq: 1 },
+      { type: 'PASS', teamId: 't-b', turnSeq: 2 },
+      { type: 'PASS', teamId: 't-c', turnSeq: 3 },
+    ]);
+
+    const lot = s.lots[0];
+    expect(lot.status).toBe('burned');
+    expect(lot.winnerTeamId).toBeNull();
+    expect(lot.finalPrice).toBeNull();
+    expect(lot.turnTeamId).toBeNull();
+    expect(lot.turnDeadline).toBeNull();
+
+    // Hicbir takimin butcesi ya da urun sayisi degismedi.
+    for (const t of s.teams) {
+      expect(t.budgetLeft, t.name).toBe(10);
+      expect(t.itemsWon, t.name).toBe(0);
+    }
+
+    // Sonuc koreografisi yanan lot icin de oynar.
+    expect(s.resultUntil).toBe(new Date(ctx.now.getTime() + 2000).toISOString());
+  });
+
+  it('yanmayi LOT_BURNED olayiyla bildirir', () => {
+    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
+    const first = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
+    if (!first.ok) throw new Error('hata');
+    const r = applyAction(first.state, { type: 'PASS', teamId: 't-b', turnSeq: 2 }, ctx);
+    if (!r.ok) throw new Error('hata');
+
+    expect(r.events.map((e) => e.type)).toEqual(['TEAM_PASSED', 'LOT_BURNED']);
+    expect(r.events.find((e) => e.type === 'LOT_BURNED')).toMatchObject({ lotId: r.state.lots[0].id });
+  });
+
+  it('butcesi yetmeyen takimlar otomatik pas gecince de yanar', () => {
+    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
+    const broke = { ...state, teams: state.teams.map((t) => ({ ...t, budgetLeft: 0 })) };
+
+    // Acik lotun turu zaten A'da; A odeyemez ama resolveTurn yeni bir eylem
+    // gelmeden ilerlemez. PASS ile ilerlet: sonra B otomatik pas geçer.
+    const r = applyAction(broke, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
+    if (!r.ok) throw new Error(`hata: ${r.error.code}`);
+
+    const lot = r.state.lots[0];
+    expect(lot.status).toBe('burned');
+    expect(lot.winnerTeamId).toBeNull();
+    expect(r.state.teams.every((t) => t.itemsWon === 0)).toBe(true);
+  });
+});
+
+describe('teklif yokken tek aday', () => {
+  it('son takima sira acilir: 1 verip alabilir', () => {
+    // Iki takimda A pas gecince B tek aday kalir ama lot kapanmaz;
+    // B'nin gercek bir secimi vardir.
+    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
+    const passed = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
+    if (!passed.ok) throw new Error('hata');
+
+    const open = passed.state.lots[0];
+    expect(open.status).toBe('open');
+    expect(open.turnTeamId).toBe('t-b');
+    expect(passed.events.map((e) => e.type)).toEqual(['TEAM_PASSED', 'TURN_CHANGED']);
+
+    const r = applyAction(passed.state, { type: 'BID', teamId: 't-b', amount: 1, turnSeq: 2 }, ctx);
+    if (!r.ok) throw new Error(`hata: ${r.error.code}`);
+
+    const lot = r.state.lots[0];
+    expect(lot.status).toBe('sold');
+    expect(lot.winnerTeamId).toBe('t-b');
+    expect(lot.finalPrice).toBe(1);
+    expect(r.state.teams.find((t) => t.id === 't-b')!.budgetLeft).toBe(9);
+  });
+
+  it('son takim pas gecerse urun yanar, ona zorla verilmez', () => {
+    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
     const s = run(state, ctx, [
       { type: 'PASS', teamId: 't-a', turnSeq: 1 },
       { type: 'PASS', teamId: 't-b', turnSeq: 2 },
     ]);
 
-    const lot = s.lots[0];
-    expect(lot.status).toBe('sold');
-    expect(lot.winnerTeamId).toBe('t-c');
-    expect(lot.finalPrice).toBe(0);
-
-    const c = s.teams.find((t) => t.id === 't-c')!;
-    expect(c.budgetLeft).toBe(10);
-    expect(c.itemsWon).toBe(1);
+    expect(s.lots[0].status).toBe('burned');
+    expect(s.teams.find((t) => t.id === 't-b')!.itemsWon).toBe(0);
   });
 
-  it('bedelsiz devri LOT_SOLD olayinda free: true olarak bildirir', () => {
-    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
-    const r = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
-    if (!r.ok) throw new Error('hata');
-
-    const sold = r.events.find((e) => e.type === 'LOT_SOLD');
-    expect(sold).toMatchObject({ winnerTeamId: 't-b', price: 0, free: true });
-  });
-
-  it('butcesi 0 olan takim bedelsiz lot alabilir', () => {
-    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
-    // Iki takimin da butcesini 0 yap.
-    const broke = { ...state, teams: state.teams.map((t) => ({ ...t, budgetLeft: 0 })) };
-
-    // Acik lotun turu zaten A'da; A odeyemez, dolayisiyla resolveTurn yeni bir
-    // eylem gelmeden ilerlemez. TIMEOUT yerine dogrudan PASS ile ilerlet.
-    const r = applyAction(broke, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
-    if (!r.ok) throw new Error(`hata: ${r.error.code}`);
-
-    const lot = r.state.lots[0];
-    expect(lot.status).toBe('sold');
-    // A pas gectikten sonra aktifte yalnizca B kaldi: lot B'ye kalir.
-    expect(lot.winnerTeamId).toBe('t-b');
-    expect(lot.finalPrice).toBe(0);
-    expect(r.state.teams.find((t) => t.id === 't-b')!.itemsWon).toBe(1);
-  });
-});
-
-describe('teklif yokken tek aday', () => {
-  it('son takima sira acilmaz: teklif verip bosa para harcayamaz', () => {
-    const { state, ctx } = auctionGame({ teams: 2, budget: 10 });
-    const r = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
-    if (!r.ok) throw new Error('hata');
-
-    const lot = r.state.lots[0];
-    expect(lot.turnTeamId).toBeNull();
-    expect(lot.turnDeadline).toBeNull();
-    expect(r.events.map((e) => e.type)).toEqual(['TEAM_PASSED', 'LOT_SOLD']);
-
-    // Lot kapandi: B artik teklif veremez.
-    const late = applyAction(r.state, { type: 'BID', teamId: 't-b', amount: 5, turnSeq: 1 }, ctx);
-    expect(late.ok).toBe(false);
-    if (!late.ok) expect(late.error.code).toBe('LOT_NOT_OPEN');
-    expect(r.state.teams.find((t) => t.id === 't-b')!.budgetLeft).toBe(10);
-  });
-
-  it('lot acilisinda tek uygun takim varsa urun ona bedelsiz verilir', () => {
-    // 2 takim, limit 1. Ilk lot B'ye kalir, ikinci lotta yalnizca A uygundur.
+  it('lot acilisinda tek uygun takim varsa yine sira acilir', () => {
+    // 2 takim, limit 1. Ilk lotu B 1 vererek alir; ikinci lotta yalnizca A uygundur.
     const { state, ctx } = auctionGame({ teams: 2, budget: 10, items: 2, itemLimit: 1 });
-    const first = applyAction(state, { type: 'PASS', teamId: 't-a', turnSeq: 1 }, ctx);
-    if (!first.ok) throw new Error('hata');
-    expect(first.state.lots[0].winnerTeamId).toBe('t-b');
+    const first = run(state, ctx, [
+      { type: 'PASS', teamId: 't-a', turnSeq: 1 },
+      { type: 'BID', teamId: 't-b', amount: 1, turnSeq: 2 },
+    ]);
+    expect(first.lots[0].winnerTeamId).toBe('t-b');
 
     const later = advanceCtx(ctx, 2001);
-    const r = applyAction(first.state, { type: 'ADVANCE' }, later);
+    const r = applyAction(first, { type: 'ADVANCE' }, later);
     if (!r.ok) throw new Error('hata');
 
     const lot2 = r.state.lots[1];
     expect(lot2.activeTeamIds).toEqual(['t-a']);
-    expect(lot2.status).toBe('sold');
-    expect(lot2.winnerTeamId).toBe('t-a');
-    expect(lot2.finalPrice).toBe(0);
-    expect(lot2.turnTeamId).toBeNull();
-    expect(r.state.teams.find((t) => t.id === 't-a')!.budgetLeft).toBe(10);
-    expect(r.events.map((e) => e.type)).toEqual(['LOT_OPENED', 'LOT_SOLD']);
+    expect(lot2.status).toBe('open');
+    expect(lot2.turnTeamId).toBe('t-a');
+    expect(r.events.map((e) => e.type)).toEqual(['LOT_OPENED', 'TURN_CHANGED']);
   });
 });

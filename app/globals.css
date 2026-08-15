@@ -13,6 +13,13 @@
   --radius-card: 4px;
 
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Fontlari next/font layout.tsx'te --font-*-src olarak tanimlar; burada
+     tema tokenine baglaniyorlar. Kayitli olduklari icin font-display,
+     font-body ve font-mono birer utility olarak kullanilabilir. */
+  --font-display: var(--font-display-src);
+  --font-body: var(--font-body-src);
+  --font-mono: var(--font-mono-src);
 }
 
 :root {

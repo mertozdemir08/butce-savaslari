@@ -48,14 +48,14 @@ export function AuctionScreen({
   if (!item) return null;
 
   return (
-    <main className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--color-bg)]">
+    <main className="flex h-dvh flex-col overflow-hidden bg-bg">
       <ConnectionBar connection={connection} />
 
       <div className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-stretch border-b border-[var(--color-line)]">
-          <div className="flex items-center border-r border-[var(--color-line)] px-4 py-3 font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[0.06em] text-[var(--color-mute)] md:px-6">
+        <header className="flex shrink-0 items-stretch border-b border-line">
+          <div className="flex items-center border-r border-line px-4 py-3 font-display text-[13px] font-extrabold tracking-[0.06em] text-mute md:px-6">
             ÜRÜN
-            <b className="mx-1.5 text-[26px] text-[var(--color-text)]">
+            <b className="mx-1.5 text-[26px] text-text">
               {String(lot.lotNo).padStart(2, '0')}
             </b>
             {`/${state.items.length}`}
@@ -72,11 +72,11 @@ export function AuctionScreen({
             )}
           </div>
 
-          <div className="hidden flex-col justify-center border-l border-[var(--color-line)] px-6 py-3 text-right md:flex">
-            <span className="font-[family-name:var(--font-mono)] text-[8.5px] tracking-[0.2em] text-[var(--color-mute)]">
+          <div className="hidden flex-col justify-center border-l border-line px-6 py-3 text-right md:flex">
+            <span className="font-mono text-[8.5px] tracking-[0.2em] text-mute">
               ODA
             </span>
-            <span className="tnum mt-0.5 font-[family-name:var(--font-mono)] text-[16px] font-bold tracking-[0.14em]">
+            <span className="tnum mt-0.5 font-mono text-[16px] font-bold tracking-[0.14em]">
               {state.code}
             </span>
           </div>
@@ -86,7 +86,7 @@ export function AuctionScreen({
           {/* min-h-0 yalnizca masaustunde: telefonda govde kaydigi icin bu
               satirin kendi icerigine sigmasi gerekir, yoksa bilet ve teklif
               cubugu alttaki takim rayinin uzerine tasiyor. */}
-          <section className="flex flex-col border-b border-[var(--color-line)] px-4 py-5 md:min-h-0 md:border-b-0 md:border-r md:px-8 md:py-7">
+          <section className="flex flex-col border-b border-line px-4 py-5 md:min-h-0 md:border-b-0 md:border-r md:px-8 md:py-7">
             {result ? (
               <div className="md:min-h-0 md:flex-1">{result}</div>
             ) : (
@@ -112,14 +112,14 @@ export function AuctionScreen({
                   {errorMessage && (
                     <p
                       role="alert"
-                      className="mt-2 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-accent)]"
+                      className="mt-2 font-mono text-[10px] tracking-widest text-accent"
                     >
                       {errorMessage.toLocaleUpperCase('tr-TR')}
                     </p>
                   )}
 
                   {!isMyTurn && (
-                    <p className="mt-2 font-[family-name:var(--font-mono)] text-[10px] tracking-[0.1em] text-[var(--color-mute)]">
+                    <p className="mt-2 font-mono text-[10px] tracking-widest text-mute">
                       {`SIRA: TAKIM ${turnTeam?.name ?? '-'}`}
                     </p>
                   )}

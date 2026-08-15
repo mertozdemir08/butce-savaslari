@@ -12,15 +12,13 @@ const items: Item[] = Array.from({ length: 3 }, (_, i) => ({
 
 const TURN_SECONDS = 30;
 
-/** Acik artirmaya baslamis bir oda ve saati elle suren defter. */
-function startedRoom(teamCount = 2) {
+/** Iki takimla acik artirmaya baslamis bir oda ve saati elle suren defter. */
+function startedRoom() {
   const nowRef = { value: 1_000_000 };
   const store = createRoomStore({ now: () => nowRef.value });
   const { room, teamId } = store.create({ teamName: 'A', items, turnSeconds: TURN_SECONDS });
-  for (const name of ['B', 'C', 'D'].slice(0, teamCount - 1)) {
-    const guest = store.join(room.code, name);
-    if ('code' in guest) throw new Error('join basarisiz');
-  }
+  const guest = store.join(room.code, 'B');
+  if ('code' in guest) throw new Error('join basarisiz');
 
   const started = store.apply(room.code, teamId, { type: 'START_GAME', byTeamId: teamId });
   if (!started.ok) throw new Error(`START_GAME basarisiz: ${started.error.code}`);
@@ -36,8 +34,7 @@ describe('tickRooms', () => {
   });
 
   it('tur suresi dolunca istemci olmadan sirayi ilerletir', () => {
-    // Uc takim: A'nin suresi dolunca hala iki aday kalir, lot kapanmaz.
-    const { store, code, nowRef } = startedRoom(3);
+    const { store, code, nowRef } = startedRoom();
     const before = currentLot(store.get(code)!.state)!;
 
     nowRef.value += TURN_SECONDS * 1000;
@@ -51,14 +48,16 @@ describe('tickRooms', () => {
   it('sonuc suresi dolunca sonraki lotu istemci olmadan acar', () => {
     const { store, code, nowRef } = startedRoom();
 
-    // A'nin suresi dolar; geriye tek aday olarak B kalir ve lot bedelsiz
-    // kapanir, sonuc suresi baslar.
-    nowRef.value += TURN_SECONDS * 1000;
-    tickRooms(store, nowRef.value);
+    // Iki takimin da suresi dolar: kimse teklif vermedigi icin lot yanar
+    // ve sonuc suresi baslar.
+    for (let i = 0; i < 2; i++) {
+      nowRef.value += TURN_SECONDS * 1000;
+      tickRooms(store, nowRef.value);
+    }
 
-    const sold = store.get(code)!.state;
-    expect(sold.resultUntil).not.toBeNull();
-    expect(currentLot(sold)!.status).toBe('sold');
+    const closed = store.get(code)!.state;
+    expect(closed.resultUntil).not.toBeNull();
+    expect(currentLot(closed)!.status).toBe('burned');
 
     nowRef.value += 60_000;
     expect(tickRooms(store, nowRef.value)).toEqual([code]);

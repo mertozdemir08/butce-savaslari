@@ -35,7 +35,8 @@ export interface Lot {
   itemId: ItemId;
   /** 1'den baslar. */
   lotNo: number;
-  status: 'open' | 'sold';
+  /** 'burned': kimse teklif vermedi, urun kimseye gitmeden elendi. */
+  status: 'open' | 'sold' | 'burned';
   currentBid: number | null;
   currentBidderTeamId: TeamId | null;
   turnTeamId: TeamId | null;
@@ -106,7 +107,9 @@ export type GameEvent =
   | { type: 'TURN_CHANGED'; lotId: LotId; teamId: TeamId; deadline: string }
   | { type: 'BID_PLACED'; lotId: LotId; teamId: TeamId; amount: number }
   | { type: 'TEAM_PASSED'; lotId: LotId; teamId: TeamId; auto: boolean }
-  | { type: 'LOT_SOLD'; lotId: LotId; winnerTeamId: TeamId; price: number; free: boolean }
+  // Fiyat her zaman en az 1'dir: bedelsiz devir yerine artik yanma kurali var.
+  | { type: 'LOT_SOLD'; lotId: LotId; winnerTeamId: TeamId; price: number }
+  | { type: 'LOT_BURNED'; lotId: LotId }
   | { type: 'GAME_ENDED' }
   | { type: 'VOTING_STARTED' }
   | { type: 'VOTE_CAST'; teamId: TeamId }

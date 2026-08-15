@@ -200,11 +200,11 @@ describe('sweep', () => {
     if ('code' in b) throw new Error('join basarisiz');
 
     s.apply(room.code, teamId, { type: 'START_GAME', byTeamId: teamId });
-    // Iki takim da pas gecer -> lot kapanir; sonra ADVANCE oyunu bitirir.
+    // Iki takim da pas gecer -> lot yanarak kapanir; sonra ADVANCE oyunu bitirir.
     for (let i = 0; i < 4; i++) {
       const st = s.get(room.code)!.state;
       const lot = st.lots.find((l) => l.id === st.currentLotId);
-      if (!lot || lot.status === 'sold') break;
+      if (!lot || lot.status !== 'open') break;
       s.apply(room.code, lot.turnTeamId, {
         type: 'PASS',
         teamId: lot.turnTeamId!,

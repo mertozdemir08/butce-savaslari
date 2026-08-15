@@ -17,7 +17,7 @@ export function VersionTag() {
       // Okuyucular icin gurultu, tiklamalari da engellememeli: yalnizca goz
       // icin duran bir isaret.
       aria-hidden
-      className="pointer-events-none fixed bottom-1 right-1.5 z-50 select-none font-[family-name:var(--font-mono)] text-[8px] tracking-[0.1em] text-[var(--color-text)] opacity-25"
+      className="pointer-events-none fixed bottom-1 right-1.5 z-50 select-none font-mono text-[8px] tracking-widest text-text opacity-25"
     >
       {VERSION}
     </span>

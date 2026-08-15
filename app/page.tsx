@@ -19,8 +19,8 @@ const STEPS = [
   },
   {
     n: '03',
-    title: 'Son pas geçen alır',
-    body: 'Kimse artırmazsa ürün en son pas geçene bedelsiz kalır. Kimse istemediği şeyle kalmak istemez.',
+    title: 'İstemezsen ürün yanar',
+    body: 'Kimse teklif vermezse ürün kimseye gitmez, elenir. İstiyorsan en az 1 vereceksin.',
   },
   {
     n: '04',
@@ -55,36 +55,36 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-[100dvh]">
+    <main className="min-h-dvh">
       <div className="mx-auto grid max-w-[1400px] gap-12 px-5 py-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:px-10 lg:py-16">
         {/* Sol: oyunun ne oldugu */}
         <section className="flex flex-col">
-          <span className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.24em] text-[var(--color-accent)]">
+          <span className="font-mono text-[10px] tracking-[0.24em] text-accent">
             2-4 TAKIM · TARAYICIDA · KURULUM YOK
           </span>
 
-          <h1 className="mt-4 font-[family-name:var(--font-display)] text-[64px] font-extrabold uppercase leading-[0.86] sm:text-[84px] lg:text-[104px]">
+          <h1 className="mt-4 font-display text-[64px] font-extrabold uppercase leading-[0.86] sm:text-[84px] lg:text-[104px]">
             Bütçe
             <br />
             Savaşları
           </h1>
 
-          <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-[var(--color-dim)]">
+          <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-dim">
             Herkesin bütçesi aynı, alabileceği ürün sayısı sınırlı. Ortaya çıkan her şey için
             sırayla teklif verirsiniz. Sonunda kimin koleksiyonu daha iyi, onu da siz oylarsınız.
           </p>
 
-          <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--color-line)] py-5">
+          <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-line py-5">
             {[
               ['BÜTÇE', DEFAULT_BUDGET],
               ['ÜRÜN LİMİTİ', DEFAULT_ITEM_LIMIT],
               ['TUR SÜRESİ', `${DEFAULT_TURN_SECONDS} sn`],
             ].map(([label, value]) => (
               <div key={String(label)}>
-                <dt className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.18em] text-[var(--color-mute)]">
+                <dt className="font-mono text-[9px] tracking-[0.18em] text-mute">
                   {label}
                 </dt>
-                <dd className="tnum mt-1 font-[family-name:var(--font-display)] text-[28px] font-extrabold leading-none">
+                <dd className="tnum mt-1 font-display text-[28px] font-extrabold leading-none">
                   {value}
                 </dd>
               </div>
@@ -94,12 +94,12 @@ export default function HomePage() {
           <ol className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
             {STEPS.map((step) => (
               <li key={step.n} className="flex gap-3">
-                <span className="font-[family-name:var(--font-display)] text-[20px] font-extrabold leading-none text-[var(--color-accent)]">
+                <span className="font-display text-[20px] font-extrabold leading-none text-accent">
                   {step.n}
                 </span>
                 <div>
                   <h2 className="text-[14px] font-semibold">{step.title}</h2>
-                  <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-dim)]">
+                  <p className="mt-1 text-[13px] leading-relaxed text-dim">
                     {step.body}
                   </p>
                 </div>
@@ -110,18 +110,18 @@ export default function HomePage() {
 
         {/* Sag: giris */}
         <section className="lg:sticky lg:top-16 lg:self-start">
-          <div className="rounded-[4px] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 sm:p-7">
-            <h2 className="font-[family-name:var(--font-display)] text-[28px] font-extrabold uppercase leading-none">
+          <div className="rounded-card border border-line bg-surface p-6 sm:p-7">
+            <h2 className="font-display text-[28px] font-extrabold uppercase leading-none">
               Odaya katıl
             </h2>
-            <p className="mt-2 text-[13px] text-[var(--color-dim)]">
+            <p className="mt-2 text-[13px] text-dim">
               Odayı kuran arkadaşın sana 4 haneli bir kod verecek.
             </p>
 
             <form className="mt-6 flex flex-col gap-4" onSubmit={join}>
               <div>
                 <label
-                  className="mb-1.5 block font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.18em] text-[var(--color-mute)]"
+                  className="mb-1.5 block font-mono text-[9.5px] tracking-[0.18em] text-mute"
                   htmlFor="code"
                 >
                   ODA KODU
@@ -134,13 +134,13 @@ export default function HomePage() {
                   autoComplete="off"
                   autoCapitalize="characters"
                   placeholder="····"
-                  className="tnum w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-3 text-center font-[family-name:var(--font-mono)] text-[30px] font-bold tracking-[0.3em] placeholder:text-[var(--color-line)]"
+                  className="tnum w-full rounded-card border border-line bg-bg px-3 py-3 text-center font-mono text-[30px] font-bold tracking-[0.3em] placeholder:text-line"
                 />
               </div>
 
               <div>
                 <label
-                  className="mb-1.5 block font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.18em] text-[var(--color-mute)]"
+                  className="mb-1.5 block font-mono text-[9.5px] tracking-[0.18em] text-mute"
                   htmlFor="name"
                 >
                   TAKIM ADIN
@@ -151,14 +151,14 @@ export default function HomePage() {
                   onChange={(e) => setTeamName(e.target.value)}
                   maxLength={24}
                   autoComplete="off"
-                  className="min-h-[44px] w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-2.5 text-[15px]"
+                  className="min-h-[44px] w-full rounded-card border border-line bg-bg px-3 py-2.5 text-[15px]"
                 />
               </div>
 
               {error && (
                 <p
                   role="alert"
-                  className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-accent)]"
+                  className="font-mono text-[11px] text-accent"
                 >
                   {error}
                 </p>
@@ -170,9 +170,9 @@ export default function HomePage() {
             </form>
           </div>
 
-          <div className="mt-4 rounded-[4px] border border-dashed border-[var(--color-line)] p-6 sm:p-7">
+          <div className="mt-4 rounded-card border border-dashed border-line p-6 sm:p-7">
             <h2 className="text-[14px] font-semibold">Kod yok mu?</h2>
-            <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-dim)]">
+            <p className="mt-1 text-[13px] leading-relaxed text-dim">
               Sen kur. Hazır kategorilerden birini seç ya da kendi kelimelerini yaz, kodu
               arkadaşlarınla paylaş.
             </p>

@@ -15,12 +15,15 @@ function run(state: GameState, ctx: Ctx, actions: Action[]): GameState {
   return s;
 }
 
-/** Acik lotu, siradaki takimin pas gecmesiyle sonuna kadar tuketip kapatir. */
+/**
+ * Acik lotu, siradaki takimin pas gecmesiyle sonuna kadar tuketip kapatir.
+ * Kimse teklif vermedigi icin lot yanarak kapanir.
+ */
 function passUntilClosed(state: GameState, ctx: Ctx): GameState {
   let s = state;
   for (let i = 0; i < 10; i++) {
     const lot = s.lots.find((l) => l.id === s.currentLotId);
-    if (!lot || lot.status === 'sold') return s;
+    if (!lot || lot.status !== 'open') return s;
     const r = applyAction(s, { type: 'PASS', teamId: lot.turnTeamId!, turnSeq: lot.turnSeq }, ctx);
     if (!r.ok) throw new Error(`PASS basarisiz: ${r.error.code}`);
     s = r.state;
@@ -133,14 +136,23 @@ describe('oyun sonu', () => {
   });
 
   it('herkes limitini doldurdugunda urun kalsa bile biter', () => {
-    // 2 takim, limit 1, 5 urun. Iki lot satildiktan sonra yer kalmaz.
+    // 2 takim, limit 1, 5 urun. Pas gecmek artik limit doldurmuyor (urun
+    // yaniyor), o yuzden her lotu bir takim teklif vererek alir.
     const { state, ctx } = auctionGame({ teams: 2, items: 5, itemLimit: 1 });
 
-    let s = passUntilClosed(state, ctx);
+    // 1. lot: A 1 verir, B pas gecer -> A'ya satilir, A dolar.
+    let s = run(state, ctx, [
+      { type: 'BID', teamId: 't-a', amount: 1, turnSeq: 1 },
+      { type: 'PASS', teamId: 't-b', turnSeq: 2 },
+    ]);
+
     let c = advanceCtx(ctx, 2001);
     s = run(s, c, [{ type: 'ADVANCE' }]);
 
-    s = passUntilClosed(s, c);
+    // 2. lot: yalnizca B uygun; 1 verip alir ve o da dolar.
+    expect(s.lots[1].activeTeamIds).toEqual(['t-b']);
+    s = run(s, c, [{ type: 'BID', teamId: 't-b', amount: 1, turnSeq: 1 }]);
+
     c = advanceCtx(c, 2001);
     const r = applyAction(s, { type: 'ADVANCE' }, c);
     if (!r.ok) throw new Error('hata');

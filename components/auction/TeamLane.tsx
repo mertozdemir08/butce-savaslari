@@ -33,10 +33,10 @@ function Pips({ won, limit, onLight }: { won: number; limit: number; onLight: bo
             'h-[9px] w-[9px] rounded-[1px] border',
             i < won
               ? onLight
-                ? 'border-[var(--color-bg)] bg-[var(--color-bg)]'
+                ? 'border-bg bg-bg'
                 : 'border-[#5a5a5a] bg-[#5a5a5a]'
               : onLight
-                ? 'border-[var(--color-bg)]/30'
+                ? 'border-bg/30'
                 : 'border-[#3a3a3a]',
           ].join(' ')}
         />
@@ -55,10 +55,10 @@ function WonStrip({ names, onLight }: { names: string[]; onLight: boolean }) {
         <span
           key={`${name}-${i}`}
           className={[
-            'rounded-[2px] px-1.5 py-[2px] font-[family-name:var(--font-mono)] text-[8.5px] uppercase tracking-[0.04em]',
+            'rounded-[2px] px-1.5 py-[2px] font-mono text-[8.5px] uppercase tracking-[0.04em]',
             onLight
-              ? 'bg-[var(--color-bg)] text-[var(--color-text)]'
-              : 'bg-[var(--color-text)] text-[var(--color-bg)]',
+              ? 'bg-bg text-text'
+              : 'bg-text text-bg',
           ].join(' ')}
         >
           {name}
@@ -80,15 +80,15 @@ export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won, fi
       data-turn={isTurn ? 'true' : 'false'}
       data-out={isOut ? 'true' : 'false'}
       className={[
-        'flex flex-col justify-center border-b border-[var(--color-line-soft)] px-4 py-3',
-        'transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]',
+        'flex flex-col justify-center border-b border-line-soft px-4 py-3',
+        'transition-colors duration-200 ease-out-soft',
         fill ? 'min-h-[76px]' : '',
-        isTurn ? 'bg-[var(--color-text)] text-[var(--color-bg)]' : '',
+        isTurn ? 'bg-text text-bg' : '',
         isOut ? 'opacity-30' : '',
       ].join(' ')}
     >
       <div className="flex items-center gap-3">
-        <span className="w-3 font-[family-name:var(--font-display)] text-xs font-extrabold opacity-60">
+        <span className="w-3 font-display text-xs font-extrabold opacity-60">
           {team.seat + 1}
         </span>
 
@@ -103,14 +103,14 @@ export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won, fi
               {`TAKIM ${team.name}`}
             </span>
             {isMe && (
-              <span className="font-[family-name:var(--font-mono)] text-[9px] tracking-[0.14em] opacity-60">
+              <span className="font-mono text-[9px] tracking-[0.14em] opacity-60">
                 SEN
               </span>
             )}
           </div>
 
           <div className="mt-1 flex items-center gap-2">
-            <span className="font-[family-name:var(--font-mono)] text-[9.5px] tracking-[0.1em] opacity-70">
+            <span className="font-mono text-[9.5px] tracking-widest opacity-70">
               {team.connected ? status.label : 'BAĞLANTI YOK'}
             </span>
             <Pips won={team.itemsWon} limit={itemLimit} onLight={isTurn} />
@@ -120,11 +120,11 @@ export function TeamLane({ team, itemLimit, isMe, isTurn, isOut, status, won, fi
         <div className="text-right">
           <span
             data-testid="lane-budget"
-            className="tnum block font-[family-name:var(--font-display)] text-[22px] font-extrabold leading-none"
+            className="tnum block font-display text-[22px] font-extrabold leading-none"
           >
             {team.budgetLeft}
           </span>
-          <span className="mt-0.5 block font-[family-name:var(--font-mono)] text-[8.5px] tracking-[0.12em] opacity-60">
+          <span className="mt-0.5 block font-mono text-[8.5px] tracking-[0.12em] opacity-60">
             BÜTÇE
           </span>
         </div>

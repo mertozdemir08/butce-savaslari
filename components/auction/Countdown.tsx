@@ -52,18 +52,18 @@ export function Countdown({ deadline, clockOffsetMs, totalSeconds, onExpire }: P
         data-urgent={urgent ? 'true' : 'false'}
         aria-label={`Kalan süre ${seconds} saniye`}
         className={[
-          'tnum font-[family-name:var(--font-display)] text-[44px] font-extrabold leading-none',
-          'text-[var(--color-accent)]',
+          'tnum font-display text-[44px] font-extrabold leading-none',
+          'text-accent',
           urgent ? 'motion-safe:animate-pulse' : '',
         ].join(' ')}
       >
         {`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`}
       </span>
 
-      <span aria-hidden className="block h-[3px] w-full bg-[var(--color-line)]">
+      <span aria-hidden className="block h-[3px] w-full bg-line">
         <span
           data-testid="countdown-bar"
-          className="block h-full bg-[var(--color-accent)] transition-[width] duration-200 ease-linear"
+          className="block h-full bg-accent transition-[width] duration-200 ease-linear"
           style={{ width: `${pct}%` }}
         />
       </span>

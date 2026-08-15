@@ -11,10 +11,11 @@ import { LotTicket } from './LotTicket';
  */
 export const PHASE_AT = [0, 120, 500, 800] as const;
 
-export function stampText(lot: Lot, winner: Team): string {
-  return lot.finalPrice === 0
-    ? `BEDELSİZ · TAKIM ${winner.name}`
-    : `SATILDI · TAKIM ${winner.name} · ${lot.finalPrice}`;
+/** Kazanan yoksa lot yanmistir: kimse teklif vermedi, urun elendi. */
+export function stampText(lot: Lot, winner: Team | null): string {
+  return winner
+    ? `SATILDI · TAKIM ${winner.name} · ${lot.finalPrice}`
+    : 'YANDI · KİMSE ALMADI';
 }
 
 /**
@@ -51,7 +52,8 @@ export function useResultPhase(resultUntil: string | null, clockOffsetMs: number
 interface Props {
   lot: Lot;
   item: Item;
-  winner: Team;
+  /** Lot yandiysa null: kimse teklif vermedi. */
+  winner: Team | null;
   phase: number;
   /** true ise bilet acik artirma ekranindaki boyutunu korur. */
   fill?: boolean;
@@ -72,7 +74,7 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
         data-testid="result-ticket"
         data-phase={String(phase)}
         className={[
-          'origin-center transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'origin-center transition-transform duration-500 ease-out-soft',
           fill ? 'md:min-h-0 md:flex-1' : '',
           phase >= 1 && phase < 3 ? 'motion-safe:scale-[1.02]' : '',
           phase >= 3 ? 'motion-safe:scale-[0.97]' : '',
@@ -81,7 +83,7 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
         <LotTicket
           lot={lot}
           item={item}
-          bidderName={`TAKIM ${winner.name}`}
+          bidderName={winner ? `TAKIM ${winner.name}` : null}
           stamp={phase >= 1 ? { text: stampText(lot, winner) } : null}
           fill={fill}
         />
@@ -91,9 +93,9 @@ export function LotResult({ lot, item, winner, phase, fill = false }: Props) {
         <p
           data-testid="winner-callout"
           role="status"
-          className="mt-4 shrink-0 text-center font-[family-name:var(--font-display)] text-[28px] font-extrabold uppercase leading-none motion-safe:animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
+          className="mt-4 shrink-0 text-center font-display text-[28px] font-extrabold uppercase leading-none motion-safe:animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
         >
-          {`TAKIM ${winner.name} aldı`}
+          {winner ? `TAKIM ${winner.name} aldı` : 'Kimse almadı'}
         </p>
       )}
     </div>
