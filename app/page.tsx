@@ -19,8 +19,8 @@ const STEPS = [
   },
   {
     n: '03',
-    title: 'İstemezsen ürün yanar',
-    body: 'Kimse teklif vermezse ürün kimseye gitmez, elenir. İstiyorsan en az 1 vereceksin.',
+    title: 'Kimse istemezse açana kalır',
+    body: 'Hiç teklif gelmezse ürün, turu açan takıma bedelsiz yazılır. Pas geçmek bedava değil: istemediğin ürün senin olabilir.',
   },
   {
     n: '04',
