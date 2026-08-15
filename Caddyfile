@@ -1,0 +1,7 @@
+# Örnek Caddyfile. Alan adını kendinizinkiyle değiştirin.
+# Caddy v2 WebSocket yükseltmesini kendiliğinden geçirir; /ws için ek
+# yapılandırma gerekmez.
+
+oyun.siteniz.com {
+    reverse_proxy butce-app:3000
+}

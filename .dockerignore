@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+.superpowers
+docs
+tests
+vitest.config.ts
+coverage
+*.tsbuildinfo
+.env
+.env*.local
+Dockerfile
+.dockerignore
+docker-compose.yml
+Caddyfile

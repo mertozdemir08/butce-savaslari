@@ -1,0 +1,22 @@
+# Tek servis. Kalıcı birim (volume) YOK: oyun durumu tamamen bellekte yaşar.
+# Konteyner yeniden başlarsa açık odalar kaybolur — tasarım gereği böyle.
+#
+# Ters vekil (Caddy) aynı Docker ağında ayrı bir konteyner olarak çalışır.
+# İlk kurulumda bir kez:  docker network create web
+
+services:
+  app:
+    build: .
+    container_name: butce-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    expose:
+      - "3000"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
