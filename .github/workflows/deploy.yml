@@ -1,0 +1,78 @@
+# Bütçe Savaşları — main'e her push'ta VPS'e dağıtım.
+# Sunucudaki kopya kendi kendini günceller; bu iş yalnızca SSH ile tetikler.
+#
+# Gereken secret'lar (repo > Settings > Secrets and variables > Actions):
+#   SSH_HOST         VPS'in adresi ya da IPv4'ü
+#   SSH_USER         bağlanılacak kullanıcı
+#   SSH_PRIVATE_KEY  o kullanıcının özel anahtarı (tam dosya içeriği,
+#                    "-----BEGIN ... KEY-----" satırı dahil)
+#
+# Yeniden derleme çalışan konteyneri değiştirir; oyun durumu tamamen bellekte
+# olduğu için o anda açık olan bütün odalar düşer. Kimse oynamıyorken push edin.
+
+name: Dağıtım
+
+on:
+  push:
+    branches: [main]
+
+# Üst üste gelen push'lar sunucuda çakışmasın: sıraya girerler, iptal edilmez.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  # Bozuk main canlıya çıkmasın: testler ve derleme geçmeden dağıtım başlamaz.
+  dogrula:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  dagit:
+    needs: dogrula
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH anahtarını hazırla
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sunucuda güncelle ve yeniden başlat
+        run: |
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" 'bash -s' <<'UZAK'
+          set -euo pipefail
+          cd /opt/butce-savaslari
+          git fetch --prune origin
+          git reset --hard origin/main
+          docker compose up -d --build
+          docker image prune -f
+          UZAK
+
+      - name: Ayağa kalktığını doğrula
+        run: |
+          ssh -i ~/.ssh/id_deploy "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" 'bash -s' <<'UZAK'
+          set -euo pipefail
+          cd /opt/butce-savaslari
+          for i in $(seq 1 30); do
+            if docker compose ps --status running --quiet app | grep -q .; then
+              echo "app konteyneri çalışıyor"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "app konteyneri 60 saniyede ayağa kalkmadı" >&2
+          docker compose logs --tail 50 app >&2
+          exit 1
+          UZAK
