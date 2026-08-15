@@ -1,8 +1,10 @@
 # Tek servis. Kalıcı birim (volume) YOK: oyun durumu tamamen bellekte yaşar.
 # Konteyner yeniden başlarsa açık odalar kaybolur — tasarım gereği böyle.
 #
-# Ters vekil (Caddy) aynı Docker ağında ayrı bir konteyner olarak çalışır.
-# İlk kurulumda bir kez:  docker network create web
+# Port dışarıya yayınlanmaz. Trafiğe tek giriş, aynı Docker ağındaki Caddy'dir.
+# Ağın adı sunucudaki mevcut Caddy'ninkiyle aynı olmalı; nasıl bulacağın
+# README'nin "Dağıtım" bölümünde. Farklıysa CADDY_NETWORK ile geç:
+#   CADDY_NETWORK=agin-adi docker compose up -d --build
 
 services:
   app:
@@ -15,8 +17,9 @@ services:
     expose:
       - "3000"
     networks:
-      - web
+      - caddy
 
 networks:
-  web:
+  caddy:
     external: true
+    name: ${CADDY_NETWORK:-caddy_default}

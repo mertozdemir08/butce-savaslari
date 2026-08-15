@@ -1,7 +1,9 @@
-# Örnek Caddyfile. Alan adını kendinizinkiyle değiştirin.
-# Caddy v2 WebSocket yükseltmesini kendiliğinden geçirir; /ws için ek
-# yapılandırma gerekmez.
+# Bu blok, sunucudaki Caddy'nin kendi Caddyfile'ina eklenir.
+# Caddy sertifikayi Let's Encrypt'ten kendi alir ve yeniler; ek ayar gerekmez.
+# WebSocket yukseltmesini de kendiliginden gecirir, /ws icin kural yazilmaz.
+#
+# "butce-app" konteynerin adi. Caddy ile ayni Docker aginda olmalari sart.
 
-oyun.siteniz.com {
+butcesavaslari.valientedyazilim.com {
     reverse_proxy butce-app:3000
 }

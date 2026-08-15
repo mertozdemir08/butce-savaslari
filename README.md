@@ -102,29 +102,95 @@ mobil şebeke düştüğünde takım "bağlı" görünmeye devam etmez.
 
 ## Dağıtım
 
-Kendi sunucunuzda Docker ile çalışır. Ters vekil olarak Caddy varsayılır;
-TLS'i Caddy kendi halleder.
+Ubuntu sunucuda Docker ile çalışır. Dışarıya port açmaz; tek giriş, aynı
+Docker ağındaki Caddy konteyneridir. TLS'i Caddy kendi halleder.
+
+### 1. DNS
+
+Alan adı için VPS'in IPv4 adresine bir `A` kaydı açın:
+
+```
+butcesavaslari    A    <VPS_IP>
+```
+
+Yayılmasını doğrulayın — Caddy sertifikayı ancak kayıt görünürse alabilir:
 
 ```bash
-docker network create web          # ilk kurulumda bir kez
+dig +short butcesavaslari.valientedyazilim.com
+```
+
+### 2. Depoyu sunucuya alın
+
+Depo private ise sunucuya salt okunur bir **deploy key** koyun (hesabın
+tamamına erişen bir token'dan daha dar bir yetki):
+
+```bash
+ssh-keygen -t ed25519 -C "vps-butce" -f ~/.ssh/butce_deploy -N ""
+cat ~/.ssh/butce_deploy.pub
+# Bu anahtarı GitHub'da: repo > Settings > Deploy keys > Add deploy key
+# ("Allow write access" işaretlenmez.)
+
+cat >> ~/.ssh/config <<'EOF'
+Host github-butce
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/butce_deploy
+EOF
+
+git clone github-butce:mertozdemir08/hero-bet.git /opt/butce-savaslari
+```
+
+### 3. Caddy'nin ağını bulun
+
+Uygulama, Caddy'nin bulunduğu ağa katılmalı; yoksa Caddy `butce-app` adını
+çözemez.
+
+```bash
+docker ps --format '{{.Names}}'                      # Caddy konteynerinin adı
+docker inspect <caddy-konteyneri> \
+  --format '{{range $n, $_ := .NetworkSettings.Networks}}{{$n}}{{"\n"}}{{end}}'
+```
+
+Çıkan ağ adını `CADDY_NETWORK` ile geçin (varsayılan `caddy_default`):
+
+```bash
+cd /opt/butce-savaslari
+echo "CADDY_NETWORK=<ag-adi>" > .env
 docker compose up -d --build
 ```
 
-`docker-compose.yml` tek servis tanımlar: kalıcı birim yok, `restart:
-unless-stopped`, port yalnızca Docker ağına açılır (`expose`), dışarıya
-doğrudan yayınlanmaz.
+`.env` dosyası `.gitignore` kapsamındadır, depoya girmez.
 
-Caddy'yi aynı `web` ağında çalıştırın ve `Caddyfile` örneğindeki gibi
-yönlendirin:
+### 4. Caddy'ye site bloğunu ekleyin
+
+Caddy'nin kendi `Caddyfile`'ına ekleyin (bu depodaki `Caddyfile` yalnızca
+kopyalanacak örnektir):
 
 ```
-oyun.siteniz.com {
+butcesavaslari.valientedyazilim.com {
     reverse_proxy butce-app:3000
 }
 ```
 
+Sonra yeniden yükleyin — bu, çalışan siteleri düşürmez:
+
+```bash
+docker exec <caddy-konteyneri> caddy reload --config /etc/caddy/Caddyfile
+```
+
 Caddy v2 WebSocket yükseltmesini kendiliğinden geçirir; `/ws` için ek
 yapılandırma gerekmez.
+
+### 5. Doğrulama
+
+```bash
+docker compose logs -f app        # "Bütçe Savaşları hazır" satırı
+curl -I https://butcesavaslari.valientedyazilim.com
+```
+
+Tarayıcıda bir oda kurup ikinci bir sekmeden koda katılın; teklif verildiğinde
+diğer sekmenin anında güncellenmesi WebSocket'in vekil arkasından geçtiğini
+gösterir.
 
 **Güncelleme:** `git pull && docker compose up -d --build`. Bu, çalışan tüm
 odaları düşürür — durum bellekte olduğu için kaçınılmaz. Kimse oynamıyorken
