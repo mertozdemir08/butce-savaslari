@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Saira_Condensed, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
+import { VersionTag } from '@/components/ui/VersionTag';
 import './globals.css';
 
 const display = Saira_Condensed({
@@ -31,7 +32,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <VersionTag />
+      </body>
     </html>
   );
 }

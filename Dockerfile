@@ -16,6 +16,10 @@ RUN npm ci
 FROM node:22-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# Sürüm etiketi derleme anında gömülür: .git imaja kopyalanmadığı için
+# (bkz. .dockerignore) commit hash'i dışarıdan geçmek zorunda.
+ARG APP_VERSION=dev
+ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

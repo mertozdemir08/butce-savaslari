@@ -8,7 +8,12 @@
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # Dağıtım betiği package.json'daki sürümü "v1.1.0" olarak geçer. Elle
+        # `docker compose up` çalıştırırken boş kalır, etiket "dev" görünür.
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: butce-app
     restart: unless-stopped
     environment:

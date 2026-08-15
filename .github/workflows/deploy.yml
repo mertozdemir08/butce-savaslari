@@ -55,7 +55,13 @@ jobs:
           set -euo pipefail
           cd /opt/butce-savaslari
           git fetch --prune origin
-          git reset --hard origin/main
+          # --ff-only: sunucuda beklenmedik bir sey varsa sessizce ezmek
+          # yerine gurultulu sekilde durur, is kirmizi yanar.
+          git pull --ff-only origin main
+          # Ekranin sag altinda gorunecek surum etiketi, package.json'dan.
+          SURUM="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' package.json | head -1)"
+          export APP_VERSION="v${SURUM}"
+          echo "dagitilan surum: $APP_VERSION"
           docker compose up -d --build
           docker image prune -f
           UZAK
