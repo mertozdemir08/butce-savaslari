@@ -64,10 +64,12 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
         ].join(' ')}
       >
         {item.imageUrl ? (
-          // Kaynak gorseller 300x171..300x265; net kopya en fazla 2x buyur,
-          // otesinde bulaniklasiyor. Kalan yeri ayni gorselin bulanik ve
-          // koyultulmus kopyasi doldurur: bant bos kalmaz, bulaniklik zemin
-          // gibi okunur. Buyutme blur kenarinin gorunmesini engeller.
+          // Net kopya object-contain: kategoriler arasi en-boy oranlari
+          // degisiyor, kirpma karakterin kafasini kesiyordu. Genislik siniri
+          // dusuk cozunurluklu kaynaklarin 2x'ten fazla buyumesini engeller.
+          // Kalan yeri ayni gorselin bulanik ve koyultulmus kopyasi doldurur:
+          // bant bos kalmaz, bulaniklik zemin gibi okunur. Buyutme blur
+          // kenarinin gorunmesini engeller.
           <>
             <img
               aria-hidden
@@ -78,7 +80,7 @@ export function LotTicket({ lot, item, bidderName, stamp = null, fill = false }:
             <img
               src={item.imageUrl}
               alt={item.name}
-              className="relative h-full max-h-[342px] w-full max-w-[600px] object-cover"
+              className="relative h-full max-h-[500px] w-full max-w-[600px] object-contain"
             />
           </>
         ) : (
