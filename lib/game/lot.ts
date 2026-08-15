@@ -1,4 +1,4 @@
-import { RESULT_MS } from './constants';
+import { MIN_VOTING_TEAMS, RESULT_MS } from './constants';
 import { canAfford, findTeam, hasRoom, teamAtSeat, withLot, withTeam } from './helpers';
 import type { Ctx, GameEvent, GameState, Lot } from './types';
 
@@ -191,7 +191,7 @@ function closeLot(
 }
 
 function endGame(state: GameState): { state: GameState; events: GameEvent[] } {
-  const status = state.teams.length >= 3 ? 'voting' : 'finished';
+  const status = state.teams.length >= MIN_VOTING_TEAMS ? 'voting' : 'finished';
   const events: GameEvent[] = [{ type: 'GAME_ENDED' }];
   if (status === 'voting') events.push({ type: 'VOTING_STARTED' });
   return {

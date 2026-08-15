@@ -4,8 +4,22 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { dispatch, type Conn } from './dispatch';
 import { parseClientMessage, type ServerMessage } from './protocol';
 import { createRoomStore, type RoomStore } from './rooms';
+import { tickRooms } from './tick';
 
 const SWEEP_INTERVAL_MS = 60_000;
+
+/** Sunucu saatinin cozunurlugu. Tur sureleri saniye olcegindedir. */
+const TICK_INTERVAL_MS = 500;
+
+/**
+ * Yarim acik baglantilari ayikla: her turda ping atilir, bir sonraki tura
+ * kadar pong gelmediyse soket kapatilir. Mobil sebeke dustugunde TCP kapanis
+ * bildirimi gelmedigi icin takim aksi halde "bagli" gorunmeye devam ederdi.
+ */
+const HEARTBEAT_INTERVAL_MS = 30_000;
+
+/** Tek cerceve icin ust sinir. Bir oyun kurulumu bunun cok altinda kalir. */
+const MAX_PAYLOAD_BYTES = 256 * 1024;
 
 export interface GameServer {
   wss: WebSocketServer;
@@ -23,8 +37,10 @@ export function attachGameServer(
 ): GameServer {
   const store = opts.store ?? createRoomStore();
   const path = opts.path ?? '/ws';
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD_BYTES });
   const conns = new Map<WebSocket, Conn>();
+  /** Son heartbeat turundan beri pong gelen soketler. */
+  const alive = new Set<WebSocket>();
 
   // Upgrade'i kendimiz suzuyoruz: yalnizca oyun yolunu aliyoruz, gerisini
   // (dev modunda Next'in /_next/hmr soketi) sunucunun oteki dinleyicilerine
@@ -72,6 +88,8 @@ export function attachGameServer(
 
   wss.on('connection', (socket: WebSocket) => {
     conns.set(socket, { code: null, teamId: null });
+    alive.add(socket);
+    socket.on('pong', () => alive.add(socket));
 
     socket.on('message', (data) => {
       let raw: unknown;
@@ -100,11 +118,31 @@ export function attachGameServer(
     const drop = () => {
       const gone = conns.get(socket);
       conns.delete(socket);
+      alive.delete(socket);
       if (gone?.code) syncPresence(gone.code);
     };
     socket.on('close', drop);
     socket.on('error', drop);
   });
+
+  // Sunucunun kendi saati: tur sureleri ve sonuc koreografisi artik
+  // tarayici zamanlayicilarina bagli degil.
+  const ticker = setInterval(() => {
+    for (const code of tickRooms(store, Date.now())) broadcast(code);
+  }, TICK_INTERVAL_MS);
+
+  const heartbeat = setInterval(() => {
+    for (const socket of conns.keys()) {
+      if (!alive.has(socket)) {
+        // Bir onceki turdan beri pong yok: baglanti olmus. terminate() close
+        // olayini tetikler, varlik listesi oradan guncellenir.
+        socket.terminate();
+        continue;
+      }
+      alive.delete(socket);
+      socket.ping();
+    }
+  }, HEARTBEAT_INTERVAL_MS);
 
   const sweeper = setInterval(() => {
     const removed = store.sweep(Date.now());
@@ -122,6 +160,8 @@ export function attachGameServer(
     wss,
     store,
     stop() {
+      clearInterval(ticker);
+      clearInterval(heartbeat);
       clearInterval(sweeper);
       server.off('upgrade', onUpgrade);
       wss.close();

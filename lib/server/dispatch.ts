@@ -5,7 +5,7 @@ import {
   type ServerErrorCode,
   type ServerMessage,
 } from './protocol';
-import type { RoomStore } from './rooms';
+import { MAX_ROOMS, type RoomStore } from './rooms';
 import { shuffle } from './shuffle';
 
 /** Bir baglantinin hangi odaya ve hangi takima bagli oldugu. */
@@ -45,6 +45,10 @@ export function dispatch(store: RoomStore, conn: Conn, msg: ClientMessage): Disp
   // --- Odaya baglanma ---
 
   if (msg.t === 'create') {
+    if (store.size() >= MAX_ROOMS) {
+      return fail('SERVER_BUSY', 'Sunucu şu an dolu. Birazdan tekrar deneyin.');
+    }
+
     // Sira sunucuda karistirilir: ayni kategori her oyunda farkli aksin.
     const items = shuffle(toItems(msg.items));
     if (items.length === 0) return fail('NO_ITEMS', 'Ürün listesi boş.');

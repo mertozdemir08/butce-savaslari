@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { dispatch, type Conn } from '@/lib/server/dispatch';
-import { createRoomStore, type RoomStore } from '@/lib/server/rooms';
+import { createRoomStore, MAX_ROOMS, type RoomStore } from '@/lib/server/rooms';
 import type { ServerMessage } from '@/lib/server/protocol';
 
 const items = [{ name: 'Ev' }, { name: 'Araba' }];
@@ -141,6 +141,27 @@ describe('dispatch - odaya baglanma', () => {
     });
     expect(errorOf(r.reply)).toBe('NOT_AUTHORIZED');
     expect(r.attach).toBeNull();
+  });
+
+  it('oda ust sinirina ulasilinca yeni oda kurulmaz', () => {
+    const store = createRoomStore();
+    const create = () =>
+      dispatch(store, { code: null, teamId: null }, {
+        t: 'create',
+        teamName: 'A',
+        budget: 10,
+        itemLimit: 5,
+        turnSeconds: 30,
+        items,
+      });
+
+    for (let i = 0; i < MAX_ROOMS; i++) create();
+    expect(store.size()).toBe(MAX_ROOMS);
+
+    const overflow = create();
+    expect(errorOf(overflow.reply)).toBe('SERVER_BUSY');
+    expect(overflow.attach).toBeNull();
+    expect(store.size()).toBe(MAX_ROOMS);
   });
 });
 

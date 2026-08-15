@@ -1,4 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import {
+  MAX_BUDGET,
+  MAX_ITEMS,
+  MAX_ITEM_LIMIT,
+  MAX_ITEM_NAME,
+  MAX_TURN_SECONDS,
+  MIN_BUDGET,
+  MIN_ITEM_LIMIT,
+  MIN_TURN_SECONDS,
+} from '@/lib/game/constants';
 import { parseClientMessage, toItems } from '@/lib/server/protocol';
 
 describe('parseClientMessage - kabul', () => {
@@ -89,6 +99,44 @@ describe('parseClientMessage - ret', () => {
   });
 });
 
+describe('parseClientMessage - create ayar sinirlari', () => {
+  const base = { t: 'create', teamName: 'A', budget: 10, itemLimit: 5, turnSeconds: 30, items: [] };
+
+  it('araligin disindaki butceyi reddeder', () => {
+    for (const budget of [0, -1, MAX_BUDGET + 1]) {
+      expect(parseClientMessage({ ...base, budget }), String(budget)).toBeNull();
+    }
+  });
+
+  it('araligin disindaki urun limitini reddeder', () => {
+    for (const itemLimit of [0, -3, MAX_ITEM_LIMIT + 1]) {
+      expect(parseClientMessage({ ...base, itemLimit }), String(itemLimit)).toBeNull();
+    }
+  });
+
+  it('araligin disindaki tur suresini reddeder', () => {
+    for (const turnSeconds of [0, MIN_TURN_SECONDS - 1, MAX_TURN_SECONDS + 1, 2 ** 31]) {
+      expect(parseClientMessage({ ...base, turnSeconds }), String(turnSeconds)).toBeNull();
+    }
+  });
+
+  it('sinir degerleri kabul eder', () => {
+    const edges = [
+      { budget: MIN_BUDGET, itemLimit: MIN_ITEM_LIMIT, turnSeconds: MIN_TURN_SECONDS },
+      { budget: MAX_BUDGET, itemLimit: MAX_ITEM_LIMIT, turnSeconds: MAX_TURN_SECONDS },
+    ];
+    for (const edge of edges) {
+      expect(parseClientMessage({ ...base, ...edge }), JSON.stringify(edge)).not.toBeNull();
+    }
+  });
+
+  it('cok uzun urun listesini reddeder', () => {
+    const items = Array.from({ length: MAX_ITEMS + 1 }, (_, i) => ({ name: `U${i}` }));
+    expect(parseClientMessage({ ...base, items })).toBeNull();
+    expect(parseClientMessage({ ...base, items: items.slice(0, MAX_ITEMS) })).not.toBeNull();
+  });
+});
+
 describe('toItems', () => {
   it('ad ve gorsel cifti olan girdiyi cevirir', () => {
     const items = toItems([
@@ -123,5 +171,22 @@ describe('toItems', () => {
 
   it('dizi olmayan girdide bos dizi doner', () => {
     expect(toItems('Ev' as unknown as unknown[])).toEqual([]);
+  });
+
+  it('cok uzun urun adini kirpar', () => {
+    const items = toItems([{ name: 'A'.repeat(MAX_ITEM_NAME + 50) }]);
+    expect(items[0].name).toHaveLength(MAX_ITEM_NAME);
+  });
+
+  it('protokole gore goreli gorsel adresini reddeder', () => {
+    // "//baska.test/x.png" tek egik cizgiyle basliyor gibi gorunur ama
+    // tarayici bunu dis siteden yukler.
+    const items = toItems([{ name: 'A', imageUrl: '//baska.test/x.png' }]);
+    expect(items[0].imageUrl).toBeNull();
+  });
+
+  it('cok uzun gorsel adresini yok sayar', () => {
+    const items = toItems([{ name: 'A', imageUrl: `https://ornek.test/${'x'.repeat(400)}.jpg` }]);
+    expect(items[0].imageUrl).toBeNull();
   });
 });

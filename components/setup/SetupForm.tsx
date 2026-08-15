@@ -6,7 +6,13 @@ import {
   DEFAULT_BUDGET,
   DEFAULT_ITEM_LIMIT,
   DEFAULT_TURN_SECONDS,
+  MAX_BUDGET,
+  MAX_ITEM_LIMIT,
+  MAX_TURN_SECONDS,
+  MIN_BUDGET,
   MIN_ITEMS,
+  MIN_ITEM_LIMIT,
+  MIN_TURN_SECONDS,
 } from '@/lib/game/constants';
 import { PACKS, getPack } from '@/lib/packs';
 import { parseItemLines, type DraftItem } from './itemLines';
@@ -83,8 +89,8 @@ export function SetupForm({
           <input
             id="budget"
             type="number"
-            min={1}
-            max={9999}
+            min={MIN_BUDGET}
+            max={MAX_BUDGET}
             className={`${field} tnum`}
             value={budget}
             onChange={(e) => setBudget(Number(e.target.value))}
@@ -97,8 +103,8 @@ export function SetupForm({
           <input
             id="itemLimit"
             type="number"
-            min={1}
-            max={99}
+            min={MIN_ITEM_LIMIT}
+            max={MAX_ITEM_LIMIT}
             className={`${field} tnum`}
             value={itemLimit}
             onChange={(e) => setItemLimit(Number(e.target.value))}
@@ -111,8 +117,8 @@ export function SetupForm({
           <input
             id="turnSeconds"
             type="number"
-            min={5}
-            max={300}
+            min={MIN_TURN_SECONDS}
+            max={MAX_TURN_SECONDS}
             className={`${field} tnum`}
             value={turnSeconds}
             onChange={(e) => setTurnSeconds(Number(e.target.value))}

@@ -45,12 +45,16 @@ export function useRoom(code: string): UseRoom {
     setHasSession(session !== null);
     if (!session) return;
 
+    // onOpen yapicidan once cagrilabilir, bu yuzden soketi ref uzerinden
+    // degil bu tutucudan okuyoruz.
+    const holder: { socket: RoomSocket | null } = { socket: null };
+
     const socket = createRoomSocket({
       url: gameSocketUrl(),
       onStatus: setConnection,
       onOpen: () => {
         // Her acilista oturumu geri al: ilk baglantida da, kopma sonrasinda da.
-        socketRef.current?.send({
+        holder.socket?.send({
           t: 'resume',
           code,
           teamId: session.teamId,
@@ -69,9 +73,11 @@ export function useRoom(code: string): UseRoom {
       },
     });
 
+    holder.socket = socket;
     socketRef.current = socket;
     return () => {
       socket.close();
+      holder.socket = null;
       socketRef.current = null;
     };
   }, [code]);

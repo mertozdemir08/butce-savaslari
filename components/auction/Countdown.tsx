@@ -63,7 +63,7 @@ export function Countdown({ deadline, clockOffsetMs, totalSeconds, onExpire }: P
       <span aria-hidden className="block h-[3px] w-full bg-[var(--color-line)]">
         <span
           data-testid="countdown-bar"
-          className="block h-full bg-[var(--color-accent)] transition-transform duration-200 ease-linear"
+          className="block h-full bg-[var(--color-accent)] transition-[width] duration-200 ease-linear"
           style={{ width: `${pct}%` }}
         />
       </span>

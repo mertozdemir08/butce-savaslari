@@ -81,6 +81,53 @@ describe('VOTE', () => {
     expect(s.status).toBe('finished');
     expect(s.votes).toHaveLength(3);
   });
+
+  it('kopan takim oylamayi kilitlemez: bagli olanlar oy verince biter', () => {
+    let s = votingState(3, [1, 2, 3], [2, 2, 1]);
+    // t-c sekmeyi kapatti.
+    s = { ...s, teams: s.teams.map((t) => (t.id === 't-c' ? { ...t, connected: false } : t)) };
+
+    for (const v of [
+      { teamId: 't-a', rankedTeamIds: ['t-b', 't-c'] },
+      { teamId: 't-b', rankedTeamIds: ['t-c', 't-a'] },
+    ]) {
+      const r = applyAction(s, { type: 'VOTE', ...v }, mkCtx());
+      if (!r.ok) throw new Error(`hata: ${r.error.code}`);
+      s = r.state;
+    }
+
+    expect(s.status).toBe('finished');
+    expect(s.votes).toHaveLength(2);
+  });
+
+  it('herkes oy verdikten sonra kopan takim oylamayi bitirir', () => {
+    let s = votingState(3, [1, 2, 3], [2, 2, 1]);
+    for (const v of [
+      { teamId: 't-a', rankedTeamIds: ['t-b', 't-c'] },
+      { teamId: 't-b', rankedTeamIds: ['t-c', 't-a'] },
+    ]) {
+      const r = applyAction(s, { type: 'VOTE', ...v }, mkCtx());
+      if (!r.ok) throw new Error(`hata: ${r.error.code}`);
+      s = r.state;
+    }
+    expect(s.status).toBe('voting');
+
+    // t-c oy vermeden ayrilir: varlik guncellemesi oylamayi tamamlar.
+    const r = applyAction(
+      s,
+      { type: 'SET_PRESENCE', onlineTeamIds: ['t-a', 't-b'] },
+      mkCtx(),
+    );
+    if (!r.ok) throw new Error('hata');
+    expect(r.state.status).toBe('finished');
+  });
+
+  it('hic oy yokken herkes koparsa oyunu bitirmez', () => {
+    const s = votingState(3, [1, 2, 3], [2, 2, 1]);
+    const r = applyAction(s, { type: 'SET_PRESENCE', onlineTeamIds: [] }, mkCtx());
+    if (!r.ok) throw new Error('hata');
+    expect(r.state.status).toBe('voting');
+  });
 });
 
 describe('tally', () => {

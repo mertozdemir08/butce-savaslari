@@ -7,7 +7,29 @@ import {
 } from './constants';
 import { err, findTeam, minBid, openLot, withLot } from './helpers';
 import { openNextLot, resolveTurn } from './lot';
-import type { Action, ApplyResult, CreateGameInput, Ctx, GameEvent, GameState } from './types';
+import type {
+  Action,
+  ApplyResult,
+  CreateGameInput,
+  Ctx,
+  GameEvent,
+  GameState,
+  Team,
+  Vote,
+} from './types';
+
+/**
+ * Oylama bitti mi.
+ *
+ * Kopan takimlar beklenmez, yoksa biri sekmeyi kapattiginda oda sonsuza kadar
+ * oylamada asili kalirdi. En az bir oy sarti, herkesin ayni anda dustugu
+ * gecici bir kopmanin oyunu bitirmesini engeller.
+ */
+function votingDone(teams: Team[], votes: Vote[]): boolean {
+  if (votes.length === 0) return false;
+  const voted = new Set(votes.map((v) => v.voterTeamId));
+  return teams.every((t) => !t.connected || voted.has(t.id));
+}
 
 export function createGame(input: CreateGameInput): GameState {
   const budget = input.budget ?? DEFAULT_BUDGET;
@@ -202,10 +224,13 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
         ...state.votes,
         { voterTeamId: action.teamId, rankedTeamIds: action.rankedTeamIds },
       ];
-      const done = votes.length === state.teams.length;
       return {
         ok: true,
-        state: { ...state, votes, status: done ? 'finished' : 'voting' },
+        state: {
+          ...state,
+          votes,
+          status: votingDone(state.teams, votes) ? 'finished' : 'voting',
+        },
         events: [{ type: 'VOTE_CAST', teamId: action.teamId }],
       };
     }
@@ -233,7 +258,14 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): ApplyRe
         }
       }
 
-      return { ok: true, state: { ...state, teams, hostTeamId }, events };
+      // Oylamada bir takim sekmeyi kapatirsa kalanlar sonsuza kadar beklemesin:
+      // bagli olan herkes oy verdiginde oylama biter.
+      const status =
+        state.status === 'voting' && votingDone(teams, state.votes)
+          ? ('finished' as const)
+          : state.status;
+
+      return { ok: true, state: { ...state, teams, hostTeamId, status }, events };
     }
 
     default:

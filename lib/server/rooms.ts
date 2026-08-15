@@ -11,7 +11,11 @@ import type {
 import { generateCode, newToken } from './codes';
 
 /** Motorun hata kodlarina defter seviyesindekiler eklenir. */
-export type StoreErrorCode = RuleErrorCode | 'ROOM_NOT_FOUND' | 'NOT_AUTHORIZED';
+export type StoreErrorCode =
+  | RuleErrorCode
+  | 'ROOM_NOT_FOUND'
+  | 'NOT_AUTHORIZED'
+  | 'SERVER_BUSY';
 
 export interface StoreError {
   code: StoreErrorCode;
@@ -51,6 +55,8 @@ export interface RoomStore {
   apply(code: string, caller: TeamId | null, action: Action): ApplyOutcome;
   /** Silinen oda kodlarini doner. */
   sweep(now: number): string[];
+  /** Acik oda kodlari. Sunucu tiki butun odalari bunun uzerinden gezer. */
+  codes(): string[];
   size(): number;
 }
 
@@ -66,6 +72,12 @@ export interface RoomStoreOptions {
 const HOUR = 60 * 60 * 1000;
 const TEN_MINUTES = 10 * 60 * 1000;
 const MAX_CODE_ATTEMPTS = 5;
+
+/**
+ * Ayni anda tutulan en fazla oda. Durum bellekte oldugu icin bu, surecin
+ * bellek tavani demek: acik adreste sinirsiz oda kurulmasini engeller.
+ */
+export const MAX_ROOMS = 200;
 
 function err(code: StoreErrorCode, message: string): StoreError {
   return { code, message };
@@ -188,6 +200,10 @@ export function createRoomStore(opts: RoomStoreOptions = {}): RoomStore {
         }
       }
       return removed;
+    },
+
+    codes() {
+      return [...rooms.keys()];
     },
 
     size() {

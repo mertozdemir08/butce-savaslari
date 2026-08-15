@@ -40,10 +40,18 @@ function enter(message: ClientMessage): Promise<EnterResult | EnterFailure> {
       TIMEOUT_MS,
     );
 
+    // Soket kendi kendine yeniden baglanir; mesaji her acilista tekrar
+    // gondermek titrek bir baglantida birden fazla oda kurardi.
+    let sent = false;
+
     holder.socket = createRoomSocket({
       url: gameSocketUrl(),
       onStatus: () => {},
-      onOpen: () => holder.socket?.send(message),
+      onOpen: () => {
+        if (sent) return;
+        sent = true;
+        holder.socket?.send(message);
+      },
       onMessage: (msg) => {
         if (msg.t === 'welcome') {
           saveSession(msg.code, { teamId: msg.teamId, token: msg.token });
